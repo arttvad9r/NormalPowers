@@ -34,9 +34,23 @@ HERMES_HOME=~/.hermes/profiles/main \
   hermes plugins install arttvad9r/NormalPowers --enable
 ```
 
-Then start a fresh Main session.
+Then start a **fresh Main session**. NormalPowers registers its routing rules as a cache-safe Hermes system-prompt section when a new session is created. Hermes freezes that section into the session prompt, so it survives context compression and process resume. Updating the plugin does not rewrite an already-existing session prompt; start a new session after updating NormalPowers.
 
 Do not install NormalPowers into Developer for the initial setup. Developer should continue using its existing engineering, Android, Gradle, test, repository, and worktree tooling.
+
+### Verify the install
+
+```bash
+HERMES_HOME=~/.hermes/profiles/main \
+  hermes plugins doctor normalpowers --ci
+```
+
+You can also confirm that it is enabled with:
+
+```bash
+HERMES_HOME=~/.hermes/profiles/main \
+  hermes plugins list
+```
 
 ## Recommended Main role boundary
 
@@ -108,15 +122,17 @@ Rules:
 - ADRs are created only for significant durable architectural decisions.
 - implementation plans are operational and belong in the Kanban handoff by default, not in a permanent `docs/plans/` archive.
 
-## Skills
+## Skills and routing
 
 The plugin registers three Hermes skills:
 
-- `normalpowers:using-normalpowers` — session routing and role boundaries;
+- `normalpowers:using-normalpowers` — detailed routing and role-boundary reference;
 - `normalpowers:brainstorming` — discovery, research, design, approval, and concise specification;
 - `normalpowers:writing-plans` — implementation brief and Kanban handoff to Developer.
 
-The session bootstrap is injected automatically on Main's first turn. Manual invocation should rarely be necessary.
+A compact always-on routing section tells Main when to load the two active workflow skills. It is deliberately much smaller than the full skill text and is stored in Hermes' cached system prompt so long-running Main sessions remain consistent across context compression.
+
+Manual skill invocation should rarely be necessary. For debugging, the skills can be inspected with Hermes' native `skill_view("normalpowers:<skill>")` mechanism.
 
 ## Source-of-truth boundaries
 
