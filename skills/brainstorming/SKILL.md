@@ -70,6 +70,18 @@ For a new project:
 - understand the product before choosing libraries or architecture;
 - keep the initial scope deliberately small.
 
+## Scope discipline
+
+Maintain these three explicit buckets throughout brainstorming:
+
+- **Confirmed** — behavior, constraints, and goals the user explicitly requested or approved. Only these become MVP requirements.
+- **Proposed** — an agent suggestion that may be useful, but is not a requirement until the user explicitly approves it. Label it as optional; do not quietly include it in an MVP, screen list, spec, or implementation brief.
+- **Out of Scope** — behavior not required for the current MVP. Put unrequested adjacent features here by default rather than asking whether to add them.
+
+Never promote an unrequested feature into the MVP. Do not turn routine product-adjacent ideas such as export, sync, recurring operations, advanced filters, themes, or analytics into requirements merely because they are common in similar applications.
+
+Prefer the narrowest implementation that satisfies Confirmed behavior. When the user's answers are sufficient to choose a conservative default, choose it and state the assumption instead of opening another decision. Ask only when the answer materially changes product behavior, data ownership/model, architecture, or acceptance criteria.
+
 ## Research when facts matter
 
 Use external research when a decision depends on current or uncertain facts such as:
@@ -84,13 +96,15 @@ Research should answer a decision, not become an open-ended report. Prefer exist
 
 ## Clarification discipline
 
-Ask questions only for decisions that materially affect the result.
+Ask questions only for decisions whose answer materially changes product behavior, data ownership/model, architecture, or acceptance criteria.
 
 - Ask one question at a time.
 - Prefer concrete alternatives when possible.
+- State the current Confirmed scope and the conservative defaults before asking the next question.
 - Focus on purpose, success criteria, constraints, non-goals, UX behavior, data ownership, and failure behavior.
 - Do not ask the user to decide routine implementation details that Developer can safely choose later.
-- Do not silently invent product requirements to fill gaps.
+- Do not ask about unrequested adjacent features merely because they are common; place them Out of Scope unless their absence blocks Confirmed behavior.
+- Do not silently invent product requirements to fill gaps or present Proposed ideas as part of the MVP.
 
 If the request contains several independent products/subsystems, decompose the scope before refining details and start with the first independently useful slice.
 
@@ -100,11 +114,11 @@ When there is a meaningful design choice, present 2-3 viable approaches with tra
 
 Do not manufacture fake alternatives for obvious decisions.
 
-Apply YAGNI aggressively. The recommended design should be the smallest design that fully satisfies the approved behavior and constraints.
+Apply YAGNI aggressively. The recommended design should be the smallest design that fully satisfies Confirmed behavior and constraints. Present an agent idea only as an explicitly optional Proposed item; do not use it to expand the MVP.
 
 ## Present the design
 
-Scale the design to the task. Cover only the dimensions that materially matter:
+Scale the design to the task. Begin with a concise **Confirmed** scope, name only material **Proposed** items, and list relevant exclusions under **Out of Scope**. Cover only the dimensions that materially matter:
 
 - product behavior and key user flows;
 - UX/state transitions;

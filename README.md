@@ -111,6 +111,16 @@ Typical requests that do not need the full planning workflow:
 
 Those can be delegated directly to Developer through Kanban.
 
+## Brainstorming scope discipline
+
+NormalPowers keeps three explicit buckets during planning:
+
+- **Confirmed** — user-requested or explicitly approved requirements;
+- **Proposed** — optional agent suggestions awaiting approval;
+- **Out of Scope** — features not required for the current MVP.
+
+Only Confirmed items enter the MVP. Main asks one material decision at a time and selects the narrowest conservative default when the user's answers already make that possible. It does not turn common adjacent features into requirements simply because they are typical for a product category.
+
 ## Project artifacts
 
 NormalPowers deliberately does not create `docs/superpowers/...`.

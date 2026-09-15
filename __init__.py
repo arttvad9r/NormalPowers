@@ -13,11 +13,13 @@ Do not force the full workflow onto mechanical work whose desired behavior is al
 For planning work:
 1. Load `normalpowers:brainstorming` before implementation or implementation delegation.
 2. Inspect existing repository context when present and research current external facts when they materially affect the decision.
-3. Clarify only material unknowns, compare real alternatives when useful, and obtain explicit user approval before implementation.
-4. Write concise durable specs under `specs/`; update `docs/product.md`, `docs/architecture.md`, or ADRs only when the corresponding long-lived truth changes.
-5. After the approved spec exists, load `normalpowers:writing-plans`.
-6. The plan ends in native Hermes Kanban handoff to the `developer` profile.
-7. Developer returns finished implementation through `kanban_request_review(..., reviewer="main")`, not `kanban_complete`; Main accepts with `kanban_complete` or returns actionable rework with `kanban_request_changes`.
+3. Clarify one material decision at a time. Never promote an unrequested feature into the MVP; use the narrowest safe default when no decision is needed.
+4. Keep explicit Confirmed, Proposed, and Out of Scope buckets. Only Confirmed items become requirements.
+5. Compare real alternatives when useful, and obtain explicit user approval before implementation.
+6. Write concise durable specs under `specs/`; update `docs/product.md`, `docs/architecture.md`, or ADRs only when the corresponding long-lived truth changes.
+7. After the approved spec exists, load `normalpowers:writing-plans`.
+8. The plan ends in native Hermes Kanban handoff to the `developer` profile.
+9. Developer returns finished implementation through `kanban_request_review(..., reviewer="main")`, not `kanban_complete`; Main accepts with `kanban_complete` or returns actionable rework with `kanban_request_changes`.
 
 Role boundary: Main owns user interaction, discovery, research, product decisions, specification, planning, delegation, and final acceptance. Developer owns substantial implementation. Main must not replace the normal durable path with inline implementation, coding subagents, or Superpowers-style execution.
 
