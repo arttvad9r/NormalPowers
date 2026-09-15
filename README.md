@@ -6,7 +6,8 @@ NormalPowers is a planning-first workflow plugin for Hermes Agent. It separates 
 User
   -> planner/orchestrator (NormalPowers)
   -> approved product + architecture + specs
-  -> execution plan / Kanban dependency graph
+  -> living execution design in plans/<feature>.md
+  -> Kanban dependency graph
   -> worker(s)
   -> integration / acceptance
 ```
@@ -26,6 +27,7 @@ The planner owns:
 - technical architecture and significant technology choices;
 - durable product/spec/architecture artifacts;
 - shared data/contracts and integration boundaries;
+- the living execution design;
 - implementation strategy and task decomposition;
 - Kanban routing and dependencies;
 - project-level acceptance.
@@ -40,7 +42,7 @@ Workers do **not** own product design, architecture redesign, scope expansion, c
 
 ## Recommended model split
 
-For a brand-new project or major architectural change, run the planning profile on the strongest reasoning model you are willing to spend on. That is where ambiguity, research, architecture, data semantics, sequencing, and acceptance criteria are resolved.
+For a brand-new project or major architectural change, run the planning profile on the strongest reasoning model you are willing to spend on. That is where ambiguity, research, architecture, data semantics, sequencing, decomposition, and acceptance criteria are resolved.
 
 Once the plan is stable, execution cards can be assigned to cheaper worker models because each card should already explain **what**, **why**, **constraints/contracts**, **dependencies**, and **how completion is verified**.
 
@@ -59,10 +61,11 @@ For non-trivial software work NormalPowers:
 7. gets user approval for the product/design direction;
 8. writes concise durable product/spec/architecture artifacts;
 9. audits those artifacts for missing decisions and contradictions;
-10. creates an explicit implementation strategy and dependency graph;
-11. materializes that graph as multiple native Hermes Kanban tasks when the work is substantial;
-12. routes each task to a suitable worker profile by capability rather than by a hardcoded name;
-13. finishes through a native Kanban review/acceptance topology.
+10. writes or updates one living execution design under `plans/<feature>.md`;
+11. turns that design into an explicit dependency graph of executable work;
+12. materializes that graph as native Hermes Kanban tasks;
+13. routes each task to a suitable worker profile by capability rather than by a hardcoded name;
+14. finishes through a native Kanban review/acceptance topology.
 
 NormalPowers does not make the planner a coding agent and does not use Superpowers subagent-driven execution.
 
@@ -85,7 +88,7 @@ HERMES_HOME=~/.hermes/profiles/<planner-profile> \
 
 Then restart the affected Hermes gateway/profile as appropriate and start a **fresh planner session**. NormalPowers registers a cache-safe Hermes system-prompt section; existing session prompts are not rewritten by a plugin update.
 
-Do not install NormalPowers into execution-only workers unless you intentionally want those profiles to act as planners too. Worker constraints are carried in the Kanban cards and durable project artifacts.
+Do not install NormalPowers into execution-only workers unless you intentionally want those profiles to act as planners too. Worker constraints are carried in project artifacts, the execution design, and Kanban cards.
 
 ### Verify
 
@@ -112,11 +115,51 @@ Profile names, orchestrator profile, and default worker routing belong to Hermes
 
 `kanban_create` itself requires an explicit assignee. During planning, NormalPowers selects a suitable profile from the currently available Hermes roster/capability descriptions or from explicit deployment instructions. It never assumes a profile literally named `developer`.
 
+## Execution design vs Kanban
+
+NormalPowers deliberately separates the unified plan from execution state.
+
+### `plans/<feature>.md`
+
+This is the **single living execution design** for an active project or substantial feature. It is non-chronological: update the same file when the implementation strategy changes instead of creating a dated archive by default.
+
+It should preserve the project-wide context that would be awkward or fragmented across Kanban cards:
+
+- objective and source-of-truth references;
+- implementation strategy and ordering rationale;
+- workstreams;
+- shared interfaces/contracts;
+- cross-task invariants;
+- dependency graph;
+- integration strategy;
+- acceptance strategy;
+- mapping from plan sections to Kanban task IDs.
+
+For a greenfield project, a stable name such as `plans/initial-implementation.md` is appropriate. For a later broad feature, use a descriptive feature name.
+
+The plan is version-controlled while work is active, but it is **not** product truth. If it conflicts with specs or architecture, the durable product/architecture artifacts win and the plan must be reconciled.
+
+After acceptance, the project may keep, archive, move, or delete the plan according to its own policy. It can remain useful context without becoming a permanent chronological plan log.
+
+### Hermes Kanban
+
+Kanban stores execution state:
+
+- concrete leaf tasks;
+- explicit dependencies;
+- assignees;
+- ready/running/blocked/review/done state;
+- handoffs;
+- review/acceptance routing;
+- structured evidence.
+
+Each worker card references the exact relevant section of `plans/<feature>.md` plus the durable spec/product/architecture files. Kanban should not be the only location where shared design rationale or cross-task contracts exist.
+
 ## What Kanban should look like
 
 A substantial project should not arrive at a worker as one card saying `Implement the whole project`.
 
-Instead the planner creates a dependency graph of coherent, independently verifiable slices, for example:
+Instead the planner first defines the workstreams in the execution design and then creates a dependency graph of coherent, independently verifiable slices, for example:
 
 ```text
 Foundation
@@ -134,7 +177,7 @@ Each worker card contains:
 
 - **Goal** — the concrete outcome;
 - **Why** — why this slice exists and what depends on it;
-- **Source of truth** — relevant spec/product/architecture paths;
+- **Source of truth** — relevant spec/product/architecture paths and an exact execution-plan section;
 - **Dependencies / inputs** — prerequisite task IDs and shared contracts;
 - **Scope** — included outcomes and explicit exclusions;
 - **Decided technical constraints** — technologies, interfaces, invariants, persistence/migration rules;
@@ -204,27 +247,30 @@ Technical decisions are different: once product intent is clear, the planner is 
 
 NormalPowers deliberately does not create `docs/superpowers/...`.
 
-Durable truth lives in conventional project locations:
+Project information is separated by purpose:
 
 ```text
 project/
 ├── specs/
 │   └── <feature-or-scope>.md
-└── docs/
-    ├── product.md
-    ├── architecture.md
-    └── decisions/
-        └── <adr>.md
+├── docs/
+│   ├── product.md
+│   ├── architecture.md
+│   └── decisions/
+│       └── <adr>.md
+└── plans/
+    └── <feature>.md
 ```
 
 - `specs/` — intended observable behavior and acceptance-relevant constraints;
 - `docs/product.md` — long-lived product purpose/scope/principles;
 - `docs/architecture.md` — selected stack, component boundaries, data/contracts, persistence/integration/migration/testing constraints that workers must follow;
 - `docs/decisions/` — only significant durable decisions whose rationale matters later;
+- `plans/<feature>.md` — current implementation strategy, workstreams, ordering, shared invariants, integration and acceptance design;
 - code/tests — actual implementation state;
-- Hermes Kanban — execution plan/state, dependencies, worker handoffs, and evidence.
+- Hermes Kanban — execution state, dependencies, worker handoffs, blockers, review, and evidence.
 
-NormalPowers does not keep a permanent chronological `docs/plans/` archive by default. The execution plan is represented by the Kanban graph plus each card's explicit contract.
+NormalPowers does **not** keep a dated chronological plan archive by default. A plan file is a living execution design for the current scope.
 
 ## Skills
 
@@ -232,22 +278,23 @@ The plugin registers three Hermes skills:
 
 - `normalpowers:using-normalpowers` — routing and role model;
 - `normalpowers:brainstorming` — research, product/design decisions, architecture, approval, durable artifacts;
-- `normalpowers:writing-plans` — implementation strategy, decomposition, Kanban graph, routing, and acceptance topology.
+- `normalpowers:writing-plans` — living execution design, decomposition, Kanban graph, routing, and acceptance topology.
 
 A compact always-on system-prompt section tells the planner when to load the active skills. It is stored in Hermes' cached system prompt so the routing survives context compression.
 
 ## Source-of-truth boundaries
 
 ```text
-Product behavior         -> specs/ + product docs
-Technical architecture   -> docs/architecture.md + ADRs
-Actual implementation    -> code + tests
-Execution plan/state     -> Hermes Kanban graph
+Product behavior           -> specs/ + product docs
+Technical architecture     -> docs/architecture.md + ADRs
+Execution design           -> plans/<feature>.md
+Actual implementation      -> code + tests
+Execution state/evidence   -> Hermes Kanban graph
 Long-term personal context -> memory
-Reference knowledge      -> Wiki / research sources
+Reference knowledge        -> Wiki / research sources
 ```
 
-Memory, Wiki, Kanban prose, or worker improvisation must not silently replace approved product/architecture truth.
+Memory, Wiki, plan text, Kanban prose, or worker improvisation must not silently replace approved product/architecture truth.
 
 ## Upstream
 
