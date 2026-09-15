@@ -1,13 +1,18 @@
 ---
 name: writing-plans
-description: Use after approved, internally consistent specs/architecture to create an explicit execution plan and materialize it as a Hermes Kanban dependency graph for workers.
+description: Use after approved, internally consistent specs/architecture to write a living execution design and materialize it as a Hermes Kanban dependency graph for workers.
 ---
 
 # Writing Plans
 
-Turn approved product and architecture artifacts into an execution plan whose worker tasks require minimal independent design decisions.
+Turn approved product and architecture artifacts into an execution design whose worker tasks require minimal independent design decisions.
 
-The execution plan is operational state. By default, materialize it in Hermes Kanban rather than maintaining a permanent chronological `docs/plans/` archive.
+The plan and Kanban have different jobs:
+
+- `plans/<feature>.md` is the single living execution design for the active project/feature;
+- Hermes Kanban is the execution graph/state: assignees, dependencies, progress, blockers, review handoffs, and evidence.
+
+Do not make Kanban cards the only place where project-wide sequencing, shared interfaces, invariants, or decomposition rationale exist.
 
 ## Preconditions
 
@@ -39,7 +44,68 @@ Workers execute assigned slices. A worker may choose only local, reversible deta
 
 If implementation exposes a missing material decision, the worker must stop/block and return it to the planner. "Figure it out" is not an acceptable hidden requirement for a worker task.
 
-## Build the execution plan
+The plan should be detailed enough that a cheaper worker model can execute its slice without reconstructing the project's architecture or reasoning.
+
+## Write the living execution design
+
+Create or update one non-chronological plan at:
+
+```text
+plans/<feature>.md
+```
+
+For a greenfield project, use a stable scope name such as `plans/initial-implementation.md`. For a substantial later feature, use a descriptive feature name. Do not create a dated plan archive by default.
+
+The plan is version-controlled while the work is active, but it is not normative product truth. Product behavior remains in `specs/` / product docs; architecture remains in architecture docs / ADRs.
+
+The execution design should contain the project-wide information that would otherwise be fragmented across cards:
+
+```markdown
+# <Feature / project> execution design
+
+## Objective
+What the implementation must deliver and which approved specs define success.
+
+## Source of truth
+- product/spec paths
+- architecture/ADR paths
+
+## Implementation strategy
+High-level technical approach and why this ordering/decomposition was chosen.
+
+## Shared contracts and invariants
+Cross-task data models, APIs, interfaces, persistence rules, compatibility rules, state-flow rules, or other invariants every affected worker must preserve.
+
+## Workstreams and ordering
+### W1 — <name>
+- outcome
+- dependencies
+- important implementation constraints
+- verification
+
+### W2 — <name>
+...
+
+## Dependency graph
+Human-readable overview of which workstreams can run in parallel and which must wait.
+
+## Integration strategy
+How independently implemented slices come together and where shared-contract compatibility is checked.
+
+## Acceptance strategy
+Project-level checks that must pass after all implementation slices complete.
+
+## Kanban mapping
+Map each workstream/plan section to its executable Kanban task title/ID once created.
+```
+
+Keep rationale where it helps future workers understand boundaries or ordering. Do not turn the plan into line-by-line coding instructions.
+
+If planning changes materially during execution, update this file first (and durable specs/architecture when those truths changed), then reconcile affected Kanban cards/dependencies. The plan should describe the current execution design, not preserve obsolete branches of thought.
+
+After acceptance, retain, archive, move, or delete the plan according to project policy. It may remain useful project context, but it never overrides current specs, architecture, code, or tests.
+
+## Build the execution graph
 
 Inspect the repository enough to understand the current implementation and identify an efficient dependency graph.
 
@@ -69,45 +135,37 @@ Each executable Kanban card should contain enough context to execute without inv
 # <Task title>
 
 ## Goal
-
 Concrete outcome this task must produce.
 
 ## Why
-
 How this task contributes to the approved product/architecture and what downstream work depends on it.
 
 ## Source of truth
-
 - Spec: `specs/...`
 - Product: `docs/product.md` when relevant
 - Architecture/ADR: `docs/architecture.md`, `docs/decisions/...`
+- Execution design: `plans/<feature>.md#<specific-section>`
 
 ## Dependencies / inputs
-
 - prerequisite task IDs or existing components;
 - exact contracts/interfaces/data assumptions this task consumes.
 
 ## Scope
-
 - implementation outcomes included in this card;
 - explicit exclusions when scope could be confused with adjacent work.
 
 ## Decided technical constraints
-
 - selected technologies/patterns relevant to this task;
 - data structures, interfaces, invariants, or integration contracts it must preserve;
 - migration/compatibility constraints.
 
 ## Acceptance criteria
-
 Observable conditions that make the task complete.
 
 ## Verification
-
 Tests/build/lint/manual checks required for this slice.
 
 ## Evidence
-
 Return through Kanban:
 - implementation summary;
 - relevant changed files/areas;
@@ -115,15 +173,14 @@ Return through Kanban:
 - deviations, blockers, or follow-ups.
 
 ## Decision boundary
-
 Do not redesign, re-scope, change shared contracts, add significant dependencies, or weaken requirements. If a material missing decision is discovered, block/escalate it to the planner.
 ```
 
-Reference durable artifacts by path rather than copying them wholesale.
+Reference durable artifacts and the exact relevant plan section by path rather than copying them wholesale.
 
 ## Materialize the Kanban graph
 
-Use native Hermes Kanban as the execution plan.
+Use native Hermes Kanban to materialize the already-written execution design. Kanban is execution state, not the sole plan artifact.
 
 ### Assignee routing
 
@@ -149,6 +206,8 @@ Do not ask Kanban triage/auto-decomposition to decompose the plan again. The pla
 
 Use a shared tenant/project namespace when the deployment benefits from isolating several simultaneous projects.
 
+After task creation, update the plan's `Kanban mapping` with returned task IDs so the overview and executable graph stay traceable without duplicating task state into the plan.
+
 ## Review and acceptance topology
 
 Choose one native Kanban review model for the work graph.
@@ -157,7 +216,7 @@ Choose one native Kanban review model for the work graph.
 
 For substantial work, pre-create an integration/QA/acceptance task whose `parents` are the terminal implementation tasks. Assign it to the planning/orchestration profile or to an explicitly configured reviewer/QA profile.
 
-Implementation workers then finish their leaf cards with `kanban_complete` plus structured evidence. The downstream acceptance task becomes ready only when its parents are done, and verifies the assembled result against the approved specs, architecture, and project-level acceptance criteria.
+Implementation workers then finish their leaf cards with `kanban_complete` plus structured evidence. The downstream acceptance task becomes ready only when its parents are done, and verifies the assembled result against the approved specs, architecture, execution design, and project-level acceptance criteria.
 
 This is normally preferable to sending every leaf card back through an expensive planning model.
 
@@ -176,15 +235,16 @@ For a new project or broad feature, the final acceptance/QA card should verify a
 - required build/test/lint/static-analysis checks;
 - migration/persistence behavior where applicable;
 - no unapproved scope expansion or architecture drift;
+- execution matches the current plan's shared contracts and integration strategy;
 - unresolved deviations are surfaced rather than silently accepted.
 
 If acceptance finds a defect or contract violation, create or return concrete rework through Kanban. If it reveals a missing product/architecture decision, return to planning before further implementation.
 
 ## Stop after delegation
 
-Once the graph has been created successfully:
+Once the plan and graph have been created successfully:
 
-- do not implement it in the planning profile;
+- do not implement them in the planning profile;
 - do not spawn an alternative coding/subagent execution system;
 - let workers execute the planned cards and report evidence through Kanban;
-- resume planning only for blocked material decisions, changed requirements, or final acceptance.
+- resume planning only for blocked material decisions, changed requirements, plan reconciliation, or final acceptance.
