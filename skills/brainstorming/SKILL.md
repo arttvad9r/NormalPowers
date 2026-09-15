@@ -70,6 +70,31 @@ For a new project:
 - understand the product before choosing libraries or architecture;
 - keep the initial scope deliberately small.
 
+## Memory hygiene
+
+Treat a fresh project or fresh brainstorming request as a clean product context by default.
+
+Long-term memory, prior sessions, Wiki notes, and remembered project details are background context, not product requirements.
+
+Rules:
+
+- Do not silently reuse requirements, scope, architecture, feature choices, defaults, or product decisions from a previous project/session.
+- Do not present remembered project details as if the user stated them in the current brainstorming session.
+- Only carry prior project decisions forward when the user explicitly indicates they are continuing the same project, references the prior work, or explicitly confirms the remembered details.
+- Stable user preferences may inform presentation or recommendations, but must not become product requirements unless they are relevant and confirmed.
+- If remembered context appears relevant but project identity is uncertain, ask whether this is the same project before using it.
+- For a clearly new project, ignore project-specific remembered details and derive the specification from the current conversation and repository only.
+
+During brainstorming, keep three conceptual buckets separate:
+
+```text
+CONFIRMED    = explicitly stated or approved in the current project context
+PROPOSED     = agent suggestions that still require approval
+OUT OF SCOPE = not required for the current MVP unless the user asks for it
+```
+
+Never promote `PROPOSED` or remembered content into `CONFIRMED` without explicit approval.
+
 ## Research when facts matter
 
 Use external research when a decision depends on current or uncertain facts such as:
@@ -91,6 +116,9 @@ Ask questions only for decisions that materially affect the result.
 - Focus on purpose, success criteria, constraints, non-goals, UX behavior, data ownership, and failure behavior.
 - Do not ask the user to decide routine implementation details that Developer can safely choose later.
 - Do not silently invent product requirements to fill gaps.
+- Do not introduce unrequested features into the MVP merely because they are common or useful.
+- When a conservative narrow default fully preserves the user's stated intent, prefer that default over opening an unnecessary product decision.
+- Clearly label optional ideas as proposals rather than requirements.
 
 If the request contains several independent products/subsystems, decompose the scope before refining details and start with the first independently useful slice.
 
@@ -219,7 +247,8 @@ Before moving on, check the written artifacts for:
 3. hidden scope expansion;
 4. architecture choices unsupported by the approved design;
 5. requirements that cannot be verified;
-6. implementation detail accidentally presented as product truth.
+6. implementation detail accidentally presented as product truth;
+7. remembered or proposed requirements that were never confirmed in the current project context.
 
 Fix issues directly.
 
