@@ -66,6 +66,16 @@ Workers may choose only local, reversible details that do not affect product beh
 
 If a material decision is missing or the task conflicts with approved artifacts, the worker stops and returns the issue to the planner through the durable Kanban path instead of redesigning or silently widening scope.
 
+### Independent verifier
+
+For substantial user-facing work, an independent verifier tests one exact committed candidate against the approved scenario-level acceptance matrix. The verifier treats worker handoffs and earlier reports as claims to verify, works from an isolated candidate checkout, records direct evidence, and returns only `PASS`, `FAIL`, or `BLOCKED`.
+
+The verifier does not implement product code, change approved requirements, redesign architecture, widen scope, or announce product readiness. Green build, lint, or unit-test output is necessary evidence when required but never sufficient proof of user-flow acceptance. `NOT RUN` mandatory scenarios prevent PASS.
+
+### Release authority
+
+The release authority is distinct from the verifier. It may declare `READY` only after verifier PASS for the exact candidate SHA, complete mandatory-matrix evidence, and any required independent risk sample. A worker completion or verifier PASS alone is not a release decision.
+
 ## Routing rule
 
 When a request matches the planning triggers, load `normalpowers:brainstorming` before implementation or implementation delegation.
@@ -92,7 +102,7 @@ A single bounded change may remain one implementation card, but should still ref
 
 Assignees are chosen from the currently available profile/worker roster according to capability and deployment configuration. Never hardcode a literal worker profile name in the workflow.
 
-For multi-task work, prefer an explicit downstream integration/QA/acceptance task that depends on the terminal implementation tasks. For a single bounded task, same-card `kanban_request_review` is a valid review model. Follow one review model per task graph; do not duplicate both.
+For multi-task work, use a downstream sequence: implementation candidate with committed SHA and clean tree → independent verification → release acceptance. The verifier and release authority are separate responsibilities. For a single bounded task, same-card `kanban_request_review` is a valid review model. Follow one review model per task graph; do not duplicate both.
 
 ## Return and evidence
 
@@ -104,7 +114,7 @@ Every executable task should require evidence appropriate to its scope, normally
 - build/lint/static-analysis results when applicable;
 - deviations, unresolved issues, or follow-ups.
 
-The acceptance step verifies implementation and evidence against the approved specification, architecture, current execution design, and task contracts. Product/spec/architecture conflicts return to planning; workers do not silently redefine requirements.
+The acceptance step verifies implementation and evidence against the approved specification, architecture, current execution design, and task contracts. For a verifier gate, the candidate SHA, before/after clean-tree evidence, scenario matrix, commands/artifacts, verdict, and any rerun SHA are required. `FAIL` creates bounded repair for already-decided defects, then a new SHA and verifier rerun; material ambiguity returns to planning. Product/spec/architecture conflicts return to planning; workers do not silently redefine requirements.
 
 ## Instruction priority
 

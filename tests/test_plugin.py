@@ -71,6 +71,9 @@ class NormalPowersPluginTests(unittest.TestCase):
         self.assertIn("Confirmed, Proposed, and Out of Scope", section["content"])
         self.assertIn("plans/<feature>.md", section["content"])
         self.assertIn("Each card references the relevant plan section", section["content"])
+        self.assertIn("candidate SHA + clean tree", section["content"])
+        self.assertIn("independent verifier PASS/FAIL/BLOCKED", section["content"])
+        self.assertIn("verifier PASS is not READY", section["content"])
 
     def test_routing_section_is_role_name_agnostic(self):
         content = self.plugin.ROUTING_SECTION
@@ -120,6 +123,22 @@ class NormalPowersPluginTests(unittest.TestCase):
         self.assertIn("missing material decision", content)
         self.assertIn("downstream acceptance task", content)
         self.assertNotIn("assigned to the `developer` profile", content)
+
+    def test_verifier_and_release_gate_are_role_agnostic_and_evidence_based(self):
+        routing = (REPO_ROOT / "skills" / "using-normalpowers" / "SKILL.md").read_text()
+        plans = (REPO_ROOT / "skills" / "writing-plans" / "SKILL.md").read_text()
+
+        self.assertIn("Independent verifier", routing)
+        self.assertIn("Release authority", routing)
+        self.assertIn("`PASS`, `FAIL`, or `BLOCKED`", routing)
+        self.assertIn("verifier PASS alone is not a release decision", routing)
+        self.assertIn("scenario-level acceptance matrix", routing)
+        self.assertIn("Candidate integrity and verifier input", plans)
+        self.assertIn("isolated task worktree", plans)
+        self.assertIn("Verifier verdict and rework loop", plans)
+        self.assertIn("new committed candidate SHA", plans)
+        self.assertNotIn("`qa` profile", routing)
+        self.assertNotIn("`main` profile", plans)
 
     def test_notice_is_role_agnostic_and_documents_plan_boundary(self):
         content = (REPO_ROOT / "NOTICE.md").read_text()

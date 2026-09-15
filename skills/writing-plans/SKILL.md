@@ -95,6 +95,9 @@ How independently implemented slices come together and where shared-contract com
 ## Acceptance strategy
 Project-level checks that must pass after all implementation slices complete.
 
+## Acceptance matrix
+For every mandatory scenario: ID, prerequisite, action, expected result, evidence type, and severity. State the candidate-SHA, clean-tree, verifier, rework/rerun, and release-authority gates.
+
 ## Kanban mapping
 Map each workstream/plan section to its executable Kanban task title/ID once created.
 ```
@@ -208,15 +211,21 @@ Use a shared tenant/project namespace when the deployment benefits from isolatin
 
 After task creation, update the plan's `Kanban mapping` with returned task IDs so the overview and executable graph stay traceable without duplicating task state into the plan.
 
+### Candidate integrity and verifier input
+
+Before a verifier card becomes ready, the terminal implementation card must provide a committed full candidate SHA, repository/worktree location, clean Git status, baseline SHA where relevant, produced artifact identity, exact automated-check commands/results, and explicit deviations. A branch name, uncommitted local diff, or narrative handoff is not a candidate.
+
+The verifier checks out the exact SHA in an isolated task worktree and records before/after `git rev-parse HEAD`, clean tracked-source status, and `git diff --check`. Tracked-source mutation during verification makes the run `BLOCKED`, never PASS.
+
 ## Review and acceptance topology
 
 Choose one native Kanban review model for the work graph.
 
 ### Multi-task project: downstream acceptance task (default)
 
-For substantial work, pre-create an integration/QA/acceptance task whose `parents` are the terminal implementation tasks. Assign it to the planning/orchestration profile or to an explicitly configured reviewer/QA profile.
+For substantial user-facing work, pre-create an independent verifier task whose parent is the terminal implementation candidate, and a separate release-acceptance task whose parent is the verifier. Assign roles from the configured roster by capability; do not hardcode profile names.
 
-Implementation workers then finish their leaf cards with `kanban_complete` plus structured evidence. The downstream acceptance task becomes ready only when its parents are done, and verifies the assembled result against the approved specs, architecture, execution design, and project-level acceptance criteria.
+Implementation workers finish their leaf cards with structured evidence. The verifier becomes ready only after the committed candidate exists, then verifies the assembled result against approved artifacts and the scenario matrix. The release-acceptance task becomes ready only after verifier PASS; it owns READY.
 
 This is normally preferable to sending every leaf card back through an expensive planning model.
 
@@ -239,6 +248,10 @@ For a new project or broad feature, the final acceptance/QA card should verify a
 - unresolved deviations are surfaced rather than silently accepted.
 
 If acceptance finds a defect or contract violation, create or return concrete rework through Kanban. If it reveals a missing product/architecture decision, return to planning before further implementation.
+
+## Verifier verdict and rework loop
+
+The verifier returns `PASS`, `FAIL`, or `BLOCKED`; `NOT RUN` mandatory scenarios prevent PASS. On `FAIL`, it records reproducible evidence and creates bounded repair only for already-decided defects. Repair produces a new committed candidate SHA; the same verifier task reruns affected scenarios plus defined regression coverage. `BLOCKED` returns a missing environment, candidate artifact, or material decision to the planner. Neither worker completion nor verifier PASS alone means READY.
 
 ## Stop after delegation
 
