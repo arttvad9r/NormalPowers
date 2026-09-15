@@ -3,7 +3,7 @@
 NormalPowers is a planning-only workflow plugin for Hermes Agent, designed for a two-profile setup:
 
 ```text
-User -> Main -> NormalPowers planning -> Hermes Kanban -> Developer -> evidence -> Main
+User -> Main -> NormalPowers planning -> Hermes Kanban -> Developer -> Main review -> final acceptance
 ```
 
 It is inspired by the planning discipline of Superpowers, but intentionally removes Superpowers' execution layer. Main owns discovery, research, product decisions, specification, planning, delegation, and final acceptance. Developer owns implementation.
@@ -21,7 +21,7 @@ NormalPowers gives Main a durable software-planning workflow before implementati
 7. write concise durable product/spec/architecture artifacts;
 8. create a practical implementation brief;
 9. hand execution to Developer through Hermes Kanban;
-10. verify returned evidence against the approved specification before accepting completion.
+10. receive the completed work through first-class Kanban review, verify it against the approved specification, then accept or return actionable rework.
 
 NormalPowers does **not** make Main a coding agent and does not use Superpowers subagent-driven execution.
 
@@ -31,10 +31,11 @@ Install it only into the Main Hermes profile:
 
 ```bash
 HERMES_HOME=~/.hermes/profiles/main \
-  hermes plugins install arttvad9r/NormalPowers --enable
+  hermes plugins install arttvad9r/NormalPowers \
+  --ref <reviewed-40-character-commit-sha> --enable
 ```
 
-Then start a **fresh Main session**. NormalPowers registers its routing rules as a cache-safe Hermes system-prompt section when a new session is created. Hermes freezes that section into the session prompt, so it survives context compression and process resume. Updating the plugin does not rewrite an already-existing session prompt; start a new session after updating NormalPowers.
+Pin production installs to a reviewed full commit SHA rather than mutable `main`. After installation, restart the affected Main gateway using a controlled operation outside the active agent conversation, then start a **fresh Main session**. NormalPowers registers its routing rules as a cache-safe Hermes system-prompt section when a new session is created. Hermes freezes that section into the session prompt, so it survives context compression and process resume. Updating the plugin does not rewrite an already-existing session prompt; restart the gateway and start a new session after updating NormalPowers.
 
 Do not install NormalPowers into Developer for the initial setup. Developer should continue using its existing engineering, Android, Gradle, test, repository, and worktree tooling.
 
@@ -75,6 +76,19 @@ kanban:
 ```
 
 NormalPowers already performs the meaningful decomposition before handoff. A second automatic Kanban decomposition pass would create competing planning decisions.
+
+## Required Main review gate
+
+NormalPowers implementation cards must not be completed directly by Developer. The implementation brief must require:
+
+```text
+Developer self-review and verification
+-> kanban_request_review(..., reviewer="main")
+-> Main verifies against the approved specification
+-> kanban_complete, or kanban_request_changes with concrete rework
+```
+
+This preserves Main's final acceptance as a native Kanban lifecycle step. A task graph with an explicit QA/release child follows that graph instead of using same-card review.
 
 ## Automatic behavior
 

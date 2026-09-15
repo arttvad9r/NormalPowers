@@ -100,6 +100,17 @@ Return through Kanban:
 - tests executed and results;
 - lint/build/verification results;
 - deviations, unresolved issues, or follow-ups.
+
+## Required review lifecycle
+
+NormalPowers tasks are not final when Developer finishes implementation. The Kanban card must require this lifecycle:
+
+1. Developer performs its self-review and runs the required verification.
+2. Developer calls `kanban_request_review(summary=..., metadata=..., reviewer="main")` with the completion evidence and any deliverable artifacts.
+3. Main reviews the implementation and evidence against the approved specification and architecture constraints.
+4. Main calls `kanban_complete` to accept, or `kanban_request_changes(reason=...)` to return concrete rework to Developer.
+
+Developer must not call `kanban_complete` for a NormalPowers implementation card unless the task graph explicitly provides a different review/QA child. The review rule keeps Main acceptance as a real Kanban transition rather than a post-hoc claim.
 ```
 
 ## Plan quality
@@ -136,6 +147,7 @@ The card should include:
 - the concise implementation brief;
 - constraints and decision boundary;
 - required completion evidence.
+- the required Main review lifecycle: Developer requests review with `reviewer="main"`; Main accepts or requests changes.
 
 Do not paste the full contents of durable specs into the card. Reference them by path so there is one source of truth.
 
@@ -152,4 +164,4 @@ Once the Kanban task has been created successfully:
 - do not create Superpowers execution sessions;
 - wait for the normal durable Developer -> Kanban evidence -> Main return path.
 
-When evidence returns, Main verifies it against the approved spec and architecture constraints before accepting completion.
+Developer requests Main review with `kanban_request_review(..., reviewer="main")` when implementation is ready. Main verifies it against the approved spec and architecture constraints before accepting completion.

@@ -64,6 +64,8 @@ class NormalPowersPluginTests(unittest.TestCase):
         self.assertIn("normalpowers:writing-plans", section["content"])
         self.assertIn("Kanban", section["content"])
         self.assertIn("Developer owns substantial implementation", section["content"])
+        self.assertIn("kanban_request_review", section["content"])
+        self.assertIn('reviewer="main"', section["content"])
 
     def test_routing_section_does_not_force_planning_on_mechanical_work(self):
         content = self.plugin.ROUTING_SECTION

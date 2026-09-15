@@ -67,7 +67,9 @@ Do not create a second execution system. In particular, NormalPowers never trans
 
 ## Return Path
 
-When Developer returns completion evidence through Kanban, Main checks it against the approved specification and relevant architecture constraints before accepting the work as complete.
+NormalPowers implementation tasks require first-class Main review. After Developer has completed its self-review and verification, it must call `kanban_request_review(summary=..., metadata=..., reviewer="main")`, not `kanban_complete`.
+
+Main then checks the review handoff against the approved specification and relevant architecture constraints. Main accepts with `kanban_complete` or returns actionable rework through `kanban_request_changes`.
 
 Evidence should cover at least:
 

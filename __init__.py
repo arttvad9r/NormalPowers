@@ -17,12 +17,13 @@ For planning work:
 4. Write concise durable specs under `specs/`; update `docs/product.md`, `docs/architecture.md`, or ADRs only when the corresponding long-lived truth changes.
 5. After the approved spec exists, load `normalpowers:writing-plans`.
 6. The plan ends in native Hermes Kanban handoff to the `developer` profile.
+7. Developer returns finished implementation through `kanban_request_review(..., reviewer="main")`, not `kanban_complete`; Main accepts with `kanban_complete` or returns actionable rework with `kanban_request_changes`.
 
 Role boundary: Main owns user interaction, discovery, research, product decisions, specification, planning, delegation, and final acceptance. Developer owns substantial implementation. Main must not replace the normal durable path with inline implementation, coding subagents, or Superpowers-style execution.
 
 Durable execution path: User -> Main -> NormalPowers planning -> Kanban -> Developer -> Kanban evidence -> Main.
 
-When Developer returns evidence, verify it against the approved specification and relevant architecture before accepting completion. Product/spec/architecture conflicts return to Main (and the user when needed); Developer must not silently redefine requirements.
+When Developer returns the task for review, verify it against the approved specification and relevant architecture before accepting completion. Product/spec/architecture conflicts return to Main (and the user when needed); Developer must not silently redefine requirements.
 
 Direct user instructions and profile/project instructions take precedence over these workflow rules."""
 
