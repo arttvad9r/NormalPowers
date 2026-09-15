@@ -62,8 +62,21 @@ class NormalPowersPluginTests(unittest.TestCase):
         self.assertLessEqual(len(section["content"]), section["max_chars"])
         self.assertIn("normalpowers:brainstorming", section["content"])
         self.assertIn("normalpowers:writing-plans", section["content"])
-        self.assertIn("Kanban", section["content"])
-        self.assertIn("Developer owns substantial implementation", section["content"])
+        self.assertIn("planner/orchestrator", section["content"])
+        self.assertIn("Workers execute assigned scope", section["content"])
+        self.assertIn("Never assume literal profile names", section["content"])
+        self.assertIn("multiple independently verifiable leaf tasks", section["content"])
+        self.assertIn("acceptance/QA task", section["content"])
+        self.assertIn("clean scope", section["content"])
+        self.assertIn("Confirmed, Proposed, and Out of Scope", section["content"])
+
+    def test_routing_section_is_role_name_agnostic(self):
+        content = self.plugin.ROUTING_SECTION
+
+        self.assertNotIn("Developer", content)
+        self.assertNotIn("Main", content)
+        self.assertNotIn("`developer`", content)
+        self.assertNotIn('reviewer="main"', content)
 
     def test_routing_section_does_not_force_planning_on_mechanical_work(self):
         content = self.plugin.ROUTING_SECTION
@@ -71,6 +84,16 @@ class NormalPowersPluginTests(unittest.TestCase):
         self.assertIn("Do not force the full workflow onto mechanical work", content)
         self.assertIn("compile error", content)
         self.assertIn("version bump", content)
+
+    def test_writing_plan_requires_decomposition_and_minimal_worker_discretion(self):
+        content = (REPO_ROOT / "skills" / "writing-plans" / "SKILL.md").read_text()
+
+        self.assertIn("one giant `Implement the whole project` card", content)
+        self.assertIn("parents=[...]", content)
+        self.assertIn("Workers execute assigned slices", content)
+        self.assertIn("missing material decision", content)
+        self.assertIn("downstream acceptance task", content)
+        self.assertNotIn("assigned to the `developer` profile", content)
 
     def test_routing_section_id_and_size_are_bounded(self):
         self.assertEqual(self.plugin.ROUTING_SECTION_ID, "normalpowers.routing")
