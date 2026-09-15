@@ -1,155 +1,190 @@
 ---
 name: writing-plans
-description: Use after an approved spec to create a concise implementation brief and hand work to Developer through Hermes Kanban.
+description: Use after approved, internally consistent specs/architecture to create an explicit execution plan and materialize it as a Hermes Kanban dependency graph for workers.
 ---
 
 # Writing Plans
 
-Create an implementation brief that is detailed enough for Developer to execute confidently, but not so detailed that Main pre-implements the task on paper.
+Turn approved product and architecture artifacts into an execution plan whose worker tasks require minimal independent design decisions.
 
-The plan is operational state. By default it belongs in the Kanban handoff, not in a permanent `docs/plans/` archive.
+The execution plan is operational state. By default, materialize it in Hermes Kanban rather than maintaining a permanent chronological `docs/plans/` archive.
 
 ## Preconditions
 
-Before planning implementation:
+Before execution planning:
 
-- the intended product behavior must already be approved;
-- the durable specification must exist when the task changes observable behavior;
-- relevant architecture constraints must be known;
-- unresolved product decisions must be returned to the user/Main planning loop, not guessed here.
+- intended product behavior is approved;
+- durable specs exist for observable behavior changes;
+- significant architecture/technology decisions are recorded;
+- persistent-data semantics and cross-component contracts needed for implementation are decided;
+- unresolved material product or architecture choices have been closed;
+- the artifacts pass the NormalPowers consistency audit.
 
-If those conditions are not true, return to `normalpowers:brainstorming`.
+If not, return to `normalpowers:brainstorming`.
 
-## Main / Developer boundary
+## Planner / worker boundary
 
-Main decides and records:
+The planner decides and records:
 
-- what outcome must be produced;
-- which approved spec(s) and architecture constraints govern the work;
-- meaningful workstreams and dependencies;
-- how the result will be verified;
-- what evidence Developer must return.
+- implementation strategy and order;
+- task boundaries and dependencies;
+- which worker capability each task needs;
+- significant technologies and architectural patterns;
+- shared data structures/contracts and integration points;
+- migration/compatibility rules;
+- acceptance criteria and required verification;
+- where integration, QA, or final acceptance occurs.
 
-Developer decides routine, reversible implementation details.
+Workers execute assigned slices. A worker may choose only local, reversible details that do not change approved behavior, persisted-data semantics, architecture boundaries, external dependencies, public/cross-task contracts, acceptance criteria, or task decomposition.
 
-Do not prescribe exact code, line numbers, private function names, or step-by-step edits unless an exact implementation detail is itself an approved constraint.
+If implementation exposes a missing material decision, the worker must stop/block and return it to the planner. "Figure it out" is not an acceptable hidden requirement for a worker task.
 
-## Build the implementation brief
+## Build the execution plan
 
-Inspect the repository enough to identify the major workstreams and existing conventions. Do not duplicate the repository exploration Developer will need during execution.
+Inspect the repository enough to understand the current implementation and identify an efficient dependency graph.
 
-Use this shape:
+For a substantial new project or broad feature, decompose into a small set of independently executable, independently verifiable tasks. Typical scale is roughly 4-10 leaf tasks, but use the structure the work actually requires.
+
+A good task is:
+
+- large enough to produce a coherent outcome;
+- small enough that one worker does not need to re-plan the project internally;
+- explicit about why it exists and how it fits the whole;
+- explicit about dependencies and shared contracts;
+- independently testable or verifiable;
+- narrow enough to avoid unrelated redesign.
+
+Avoid both extremes:
+
+- one giant `Implement the whole project` card;
+- file/function-level micromanagement such as one card per entity, method, or UI component.
+
+A bounded change that is already coherent and independently verifiable may remain one card.
+
+## Task card contract
+
+Each executable Kanban card should contain enough context to execute without inventing missing project decisions:
 
 ```markdown
-# <Task> — Implementation Brief
+# <Task title>
 
 ## Goal
 
-One concise statement of the implementation outcome.
+Concrete outcome this task must produce.
+
+## Why
+
+How this task contributes to the approved product/architecture and what downstream work depends on it.
 
 ## Source of truth
 
 - Spec: `specs/...`
-- Product: `docs/product.md` (when relevant)
-- Architecture: `docs/architecture.md` / ADRs (when relevant)
+- Product: `docs/product.md` when relevant
+- Architecture/ADR: `docs/architecture.md`, `docs/decisions/...`
 
-## Workstreams
+## Dependencies / inputs
 
-### 1. <Area>
+- prerequisite task IDs or existing components;
+- exact contracts/interfaces/data assumptions this task consumes.
 
-Outcome to implement.
+## Scope
 
-Verification:
-- test/check that proves this workstream is correct.
+- implementation outcomes included in this card;
+- explicit exclusions when scope could be confused with adjacent work.
 
-### 2. <Area>
+## Decided technical constraints
 
-Outcome to implement.
+- selected technologies/patterns relevant to this task;
+- data structures, interfaces, invariants, or integration contracts it must preserve;
+- migration/compatibility constraints.
 
-Verification:
-- test/check that proves this workstream is correct.
+## Acceptance criteria
 
-## Constraints
+Observable conditions that make the task complete.
 
-- approved constraints copied or referenced from the spec/architecture;
-- no unrelated redesign or refactoring;
-- preserve compatibility requirements.
+## Verification
 
-## Decision boundary
+Tests/build/lint/manual checks required for this slice.
 
-Developer may choose local reversible implementation details consistent with the approved artifacts.
-
-Developer must stop/block and return the decision to Main if implementation requires:
-- changing approved product behavior;
-- expanding or narrowing scope;
-- changing an architectural boundary;
-- adding a significant new external dependency;
-- changing a public API/schema/protocol contract;
-- a destructive or irreversible migration;
-- ignoring or weakening an approved requirement.
-
-## Final verification
-
-Run the project-appropriate test/lint/build checks and verify every relevant scenario from the approved spec.
-
-## Completion evidence
+## Evidence
 
 Return through Kanban:
 - implementation summary;
-- changed areas/files;
-- tests executed and results;
-- lint/build/verification results;
-- deviations, unresolved issues, or follow-ups.
+- relevant changed files/areas;
+- verification commands/checks and results;
+- deviations, blockers, or follow-ups.
+
+## Decision boundary
+
+Do not redesign, re-scope, change shared contracts, add significant dependencies, or weaken requirements. If a material missing decision is discovered, block/escalate it to the planner.
 ```
 
-## Plan quality
+Reference durable artifacts by path rather than copying them wholesale.
 
-A good plan describes outcomes and verification, not keystrokes.
+## Materialize the Kanban graph
 
-Prefer:
+Use native Hermes Kanban as the execution plan.
+
+### Assignee routing
+
+`kanban_create` requires an explicit assignee. Select the best-fit worker/profile from the currently available Hermes roster and its capability descriptions or from deployment-specific routing instructions.
+
+Never assume a literal profile name such as `developer`. If no suitable assignee can be resolved from the current environment, report/block the handoff instead of inventing one.
+
+### Dependencies
+
+Create tasks in a dependency-aware order. Use `parents=[...]` on `kanban_create` (or `kanban_link` when linking after creation) so downstream work remains `todo` until prerequisites complete.
+
+Examples:
 
 ```text
-Add persistence support for removing the latest intake.
-Verification: deletion and total-recalculation tests.
+foundation ─┬─> data/persistence ─┬─> feature flows ─┐
+            └─> app shell/UI ─────┘                 ├─> integration/acceptance
+                                                    └─> final verification
 ```
 
-Avoid:
+Parallelize only when tasks do not depend on undecided shared contracts or overlapping edits that make parallel work unsafe.
 
-```text
-Open FooRepository.kt, add method X at line 84, create MutableStateFlow Y...
-```
+Do not ask Kanban triage/auto-decomposition to decompose the plan again. The planner already owns decomposition.
 
-Developer is an engineering profile, not a blind script runner.
+Use a shared tenant/project namespace when the deployment benefits from isolating several simultaneous projects.
 
-Keep the number of workstreams small. Split only when the pieces are independently meaningful, have different verification, or have a real dependency boundary.
+## Review and acceptance topology
 
-## Kanban handoff
+Choose one native Kanban review model for the work graph.
 
-After the brief is ready, create a Hermes Kanban task assigned to the `developer` profile using the native Kanban tooling (normally `kanban_create`).
+### Multi-task project: downstream acceptance task (default)
 
-The card should include:
+For substantial work, pre-create an integration/QA/acceptance task whose `parents` are the terminal implementation tasks. Assign it to the planning/orchestration profile or to an explicitly configured reviewer/QA profile.
 
-- repository/path;
-- task goal;
-- source-of-truth spec path(s);
-- architecture/ADR references when relevant;
-- the concise implementation brief;
-- constraints and decision boundary;
-- required completion evidence.
+Implementation workers then finish their leaf cards with `kanban_complete` plus structured evidence. The downstream acceptance task becomes ready only when its parents are done, and verifies the assembled result against the approved specs, architecture, and project-level acceptance criteria.
 
-Do not paste the full contents of durable specs into the card. Reference them by path so there is one source of truth.
+This is normally preferable to sending every leaf card back through an expensive planning model.
 
-Do not ask Kanban to auto-decompose an already planned task. NormalPowers assumes meaningful decomposition was performed here.
+### Single bounded task: same-card review
 
-If the native Kanban tool is unavailable, report the handoff problem instead of implementing the task in Main.
+For a single implementation card, `kanban_request_review(summary=..., metadata=..., reviewer=...)` may hand the task to the planner or configured reviewer before final completion.
+
+Do not also create a downstream review child for the same task. Hermes supports both review models, but combining them duplicates or strands review work.
+
+## Final project acceptance task
+
+For a new project or broad feature, the final acceptance/QA card should verify at minimum:
+
+- all relevant scenarios and requirements from durable specs;
+- integration between completed slices;
+- required build/test/lint/static-analysis checks;
+- migration/persistence behavior where applicable;
+- no unapproved scope expansion or architecture drift;
+- unresolved deviations are surfaced rather than silently accepted.
+
+If acceptance finds a defect or contract violation, create or return concrete rework through Kanban. If it reveals a missing product/architecture decision, return to planning before further implementation.
 
 ## Stop after delegation
 
-Once the Kanban task has been created successfully:
+Once the graph has been created successfully:
 
-- do not implement it in Main;
-- do not spawn coding subagents as an alternative execution path;
-- do not create Superpowers execution sessions;
-- wait for the normal durable Developer -> Kanban evidence -> Main return path.
-
-When evidence returns, Main verifies it against the approved spec and architecture constraints before accepting completion.
+- do not implement it in the planning profile;
+- do not spawn an alternative coding/subagent execution system;
+- let workers execute the planned cards and report evidence through Kanban;
+- resume planning only for blocked material decisions, changed requirements, or final acceptance.
