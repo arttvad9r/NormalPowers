@@ -14,12 +14,13 @@ For planning work:
 1. Load `normalpowers:brainstorming` before implementation or implementation delegation.
 2. Inspect existing repository context when present and research current external facts when they materially affect the decision.
 3. Clarify one material decision at a time. Never promote an unrequested feature into the MVP; use the narrowest safe default when no decision is needed.
-4. Keep explicit Confirmed, Proposed, and Out of Scope buckets. Only Confirmed items become requirements.
-5. Compare real alternatives when useful, and obtain explicit user approval before implementation.
-6. Write concise durable specs under `specs/`; update `docs/product.md`, `docs/architecture.md`, or ADRs only when the corresponding long-lived truth changes.
-7. After the approved spec exists, load `normalpowers:writing-plans`.
-8. The plan ends in native Hermes Kanban handoff to the `developer` profile.
-9. Developer returns finished implementation through `kanban_request_review(..., reviewer="main")`, not `kanban_complete`; Main accepts with `kanban_complete` or returns actionable rework with `kanban_request_changes`.
+4. Keep explicit Confirmed, Proposed, and Out of Scope buckets. Only current-session user statements or explicitly re-confirmed prior requirements are Confirmed.
+5. Treat memory, session history, Wiki, and repository context as research only: never silently import their product requirements into a new request. Reuse prior product context only when the user explicitly asks to continue or reuse it.
+6. Compare real alternatives when useful, and obtain explicit user approval before implementation.
+7. Write concise durable specs under `specs/`; update `docs/product.md`, `docs/architecture.md`, or ADRs only when the corresponding long-lived truth changes.
+8. After the approved spec exists, load `normalpowers:writing-plans`.
+9. The plan ends in native Hermes Kanban handoff to the `developer` profile.
+10. Developer returns finished implementation through `kanban_request_review(..., reviewer="main")`, not `kanban_complete`; Main accepts with `kanban_complete` or returns actionable rework with `kanban_request_changes`.
 
 Role boundary: Main owns user interaction, discovery, research, product decisions, specification, planning, delegation, and final acceptance. Developer owns substantial implementation. Main must not replace the normal durable path with inline implementation, coding subagents, or Superpowers-style execution.
 

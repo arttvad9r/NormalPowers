@@ -69,6 +69,8 @@ class NormalPowersPluginTests(unittest.TestCase):
         self.assertIn("one material decision at a time", section["content"])
         self.assertIn("Never promote an unrequested feature into the MVP", section["content"])
         self.assertIn("Confirmed, Proposed, and Out of Scope", section["content"])
+        self.assertIn("Only current-session user statements", section["content"])
+        self.assertIn("never silently import their product requirements", section["content"])
 
     def test_routing_section_does_not_force_planning_on_mechanical_work(self):
         content = self.plugin.ROUTING_SECTION

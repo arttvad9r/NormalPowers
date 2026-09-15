@@ -74,13 +74,23 @@ For a new project:
 
 Maintain these three explicit buckets throughout brainstorming:
 
-- **Confirmed** — behavior, constraints, and goals the user explicitly requested or approved. Only these become MVP requirements.
+- **Confirmed** — behavior, constraints, and goals stated or approved by the user in the current planning conversation. A previous-session item enters this bucket only after the user explicitly asks to reuse it or re-confirms it. Only these become MVP requirements.
 - **Proposed** — an agent suggestion that may be useful, but is not a requirement until the user explicitly approves it. Label it as optional; do not quietly include it in an MVP, screen list, spec, or implementation brief.
 - **Out of Scope** — behavior not required for the current MVP. Put unrequested adjacent features here by default rather than asking whether to add them.
 
 Never promote an unrequested feature into the MVP. Do not turn routine product-adjacent ideas such as export, sync, recurring operations, advanced filters, themes, or analytics into requirements merely because they are common in similar applications.
 
 Prefer the narrowest implementation that satisfies Confirmed behavior. When the user's answers are sufficient to choose a conservative default, choose it and state the assumption instead of opening another decision. Ask only when the answer materially changes product behavior, data ownership/model, architecture, or acceptance criteria.
+
+## Session and memory boundary
+
+Treat a new raw product request as a fresh scope unless the user explicitly says to continue, reuse, or modify a named earlier design/specification.
+
+- Memory, session-search results, prior transcripts, Wiki notes, and repository files may provide research context, but are never a source of Confirmed product requirements by themselves.
+- Do not say or imply that saved context has supplied requirements. Do not copy old answers into the current MVP.
+- If prior material appears relevant but the user did not explicitly request reuse, ignore it for scope. At most, ask whether the user wants to continue a specific prior design; do not list or preload its details.
+- When the user explicitly requests reuse, present a concise candidate summary as **Proposed** and ask for confirmation before treating any item as Confirmed.
+- Do not invoke session search merely to fill missing product requirements in a fresh planning conversation.
 
 ## Research when facts matter
 
@@ -105,6 +115,7 @@ Ask questions only for decisions whose answer materially changes product behavio
 - Do not ask the user to decide routine implementation details that Developer can safely choose later.
 - Do not ask about unrequested adjacent features merely because they are common; place them Out of Scope unless their absence blocks Confirmed behavior.
 - Do not silently invent product requirements to fill gaps or present Proposed ideas as part of the MVP.
+- Do not use remembered, archived, or retrieved prior-session requirements as an answer to a current clarification question.
 
 If the request contains several independent products/subsystems, decompose the scope before refining details and start with the first independently useful slice.
 

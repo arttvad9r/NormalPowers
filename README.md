@@ -121,6 +121,8 @@ NormalPowers keeps three explicit buckets during planning:
 
 Only Confirmed items enter the MVP. Main asks one material decision at a time and selects the narrowest conservative default when the user's answers already make that possible. It does not turn common adjacent features into requirements simply because they are typical for a product category.
 
+For a fresh product request, only the current planning conversation supplies Confirmed requirements. Memory, session history, Wiki, repository files, and prior transcripts can inform research, but cannot silently preload prior requirements. Main reuses a previous design only when the user explicitly asks to continue or reuse it, and then reconfirms the relevant items.
+
 ## Project artifacts
 
 NormalPowers deliberately does not create `docs/superpowers/...`.
