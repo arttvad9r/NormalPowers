@@ -48,6 +48,7 @@ The planning profile owns:
 - data models, cross-component contracts, and integration boundaries;
 - durable specifications and architecture documentation;
 - implementation strategy, sequencing, dependencies, and task decomposition;
+- the living execution design under `plans/<feature>.md`;
 - worker routing;
 - acceptance against the approved artifacts.
 
@@ -71,13 +72,23 @@ When a request matches the planning triggers, load `normalpowers:brainstorming` 
 
 After brainstorming has produced approved and internally consistent durable artifacts, load `normalpowers:writing-plans`.
 
+`writing-plans` first writes or updates one living execution design at `plans/<feature>.md`, then materializes that design as a native Hermes Kanban dependency graph. Do not make Kanban cards the only place where project-wide ordering, shared contracts, invariants, or decomposition rationale exist.
+
 Do not jump from a raw idea directly to an implementation worker. Do not create a second execution system such as Superpowers subagent-driven development or an inline coding loop owned by the planner.
 
-## Kanban model
+## Execution-design and Kanban model
 
-For substantial work, the execution plan should become a native Kanban dependency graph of independently verifiable leaf tasks. The planner performs decomposition before task creation; Kanban auto-decomposition should not make a second set of planning decisions.
+For substantial work:
 
-A single bounded change may remain one implementation card.
+1. the planner writes the current execution design in `plans/<feature>.md`;
+2. the plan records implementation strategy, workstreams, ordering rationale, shared contracts/invariants, integration strategy, acceptance strategy, and the intended dependency graph;
+3. the planner creates independently verifiable Kanban leaf tasks that reference the relevant plan sections;
+4. task IDs are mapped back into the plan for traceability;
+5. Kanban tracks assignees, dependencies, progress, blockers, review, and evidence.
+
+The planner performs decomposition before task creation; Kanban auto-decomposition should not make a second set of planning decisions.
+
+A single bounded change may remain one implementation card, but should still reference the relevant durable artifacts and any plan section that exists for the work.
 
 Assignees are chosen from the currently available profile/worker roster according to capability and deployment configuration. Never hardcode a literal worker profile name in the workflow.
 
@@ -93,7 +104,7 @@ Every executable task should require evidence appropriate to its scope, normally
 - build/lint/static-analysis results when applicable;
 - deviations, unresolved issues, or follow-ups.
 
-The acceptance step verifies implementation and evidence against the approved specification, architecture, and task contracts. Product/spec/architecture conflicts return to planning; workers do not silently redefine requirements.
+The acceptance step verifies implementation and evidence against the approved specification, architecture, current execution design, and task contracts. Product/spec/architecture conflicts return to planning; workers do not silently redefine requirements.
 
 ## Instruction priority
 

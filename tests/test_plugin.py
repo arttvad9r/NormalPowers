@@ -69,6 +69,8 @@ class NormalPowersPluginTests(unittest.TestCase):
         self.assertIn("acceptance/QA task", section["content"])
         self.assertIn("clean scope", section["content"])
         self.assertIn("Confirmed, Proposed, and Out of Scope", section["content"])
+        self.assertIn("plans/<feature>.md", section["content"])
+        self.assertIn("Each card references the relevant plan section", section["content"])
 
     def test_routing_section_is_role_name_agnostic(self):
         content = self.plugin.ROUTING_SECTION
@@ -85,6 +87,15 @@ class NormalPowersPluginTests(unittest.TestCase):
         self.assertIn("compile error", content)
         self.assertIn("version bump", content)
 
+    def test_writing_plan_separates_execution_design_from_kanban_state(self):
+        content = (REPO_ROOT / "skills" / "writing-plans" / "SKILL.md").read_text()
+
+        self.assertIn("single living execution design", content)
+        self.assertIn("plans/<feature>.md", content)
+        self.assertIn("Kanban is execution state, not the sole plan artifact", content)
+        self.assertIn("Execution design: `plans/<feature>.md#<specific-section>`", content)
+        self.assertIn("Kanban mapping", content)
+
     def test_writing_plan_requires_decomposition_and_minimal_worker_discretion(self):
         content = (REPO_ROOT / "skills" / "writing-plans" / "SKILL.md").read_text()
 
@@ -94,6 +105,15 @@ class NormalPowersPluginTests(unittest.TestCase):
         self.assertIn("missing material decision", content)
         self.assertIn("downstream acceptance task", content)
         self.assertNotIn("assigned to the `developer` profile", content)
+
+    def test_notice_is_role_agnostic_and_documents_plan_boundary(self):
+        content = (REPO_ROOT / "NOTICE.md").read_text()
+
+        self.assertNotIn("Hermes Main profile", content)
+        self.assertNotIn("Developer profile", content)
+        self.assertIn("planner/orchestrator and worker roles", content)
+        self.assertIn("plans/<feature>.md", content)
+        self.assertIn("rather than as the sole plan artifact", content)
 
     def test_routing_section_id_and_size_are_bounded(self):
         self.assertEqual(self.plugin.ROUTING_SECTION_ID, "normalpowers.routing")
