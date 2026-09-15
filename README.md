@@ -1,107 +1,210 @@
 # NormalPowers
 
-NormalPowers is a planning-only workflow plugin for Hermes Agent, designed for a two-profile setup:
+NormalPowers is a planning-first workflow plugin for Hermes Agent. It separates **high-quality software planning** from **lower-cost execution** without hardcoding profile names.
 
 ```text
-User -> Main -> NormalPowers planning -> Hermes Kanban -> Developer -> evidence -> Main
+User
+  -> planner/orchestrator (NormalPowers)
+  -> approved product + architecture + specs
+  -> execution plan / Kanban dependency graph
+  -> worker(s)
+  -> integration / acceptance
 ```
 
-It is inspired by the planning discipline of Superpowers, but intentionally removes Superpowers' execution layer. Main owns discovery, research, product decisions, specification, planning, delegation, and final acceptance. Developer owns implementation.
+The profile currently called `main`, `developer`, `android`, `backend`, `qa`, or anything else is just deployment configuration. NormalPowers reasons in roles: **planner** and **workers**.
 
-## What NormalPowers does
+It is inspired by the planning discipline of [Superpowers](https://github.com/obra/superpowers), but intentionally replaces Superpowers' execution layer with native Hermes Kanban.
 
-NormalPowers gives Main a durable software-planning workflow before implementation starts:
+## Core idea
 
-1. understand the user's intent;
-2. inspect the existing repository when one exists;
-3. research current platform/API/library facts when they matter;
-4. clarify only the decisions that are genuinely unresolved;
-5. compare reasonable approaches when there is a real design choice;
-6. get explicit approval before implementation;
-7. write concise durable product/spec/architecture artifacts;
-8. create a practical implementation brief;
-9. hand execution to Developer through Hermes Kanban;
-10. verify returned evidence against the approved specification before accepting completion.
+Front-load important decisions into the planner, then make worker execution as mechanical as practical.
 
-NormalPowers does **not** make Main a coding agent and does not use Superpowers subagent-driven execution.
+The planner owns:
+
+- discovery and research;
+- product/UX decisions;
+- technical architecture and significant technology choices;
+- durable product/spec/architecture artifacts;
+- shared data/contracts and integration boundaries;
+- implementation strategy and task decomposition;
+- Kanban routing and dependencies;
+- project-level acceptance.
+
+Workers own:
+
+- implementation of already-decided slices;
+- required tests/build/lint/verification;
+- structured evidence.
+
+Workers do **not** own product design, architecture redesign, scope expansion, cross-task contract changes, or hidden re-decomposition of a giant project request.
+
+## Recommended model split
+
+For a brand-new project or major architectural change, run the planning profile on the strongest reasoning model you are willing to spend on. That is where ambiguity, research, architecture, data semantics, sequencing, and acceptance criteria are resolved.
+
+Once the plan is stable, execution cards can be assigned to cheaper worker models because each card should already explain **what**, **why**, **constraints/contracts**, **dependencies**, and **how completion is verified**.
+
+NormalPowers does not hardcode model names or prices; this is a deployment recommendation.
+
+## What the workflow does
+
+For non-trivial software work NormalPowers:
+
+1. understands the user's intent;
+2. treats fresh product requests as clean scope rather than importing old memory as requirements;
+3. researches current platform/library/tooling facts when they affect decisions;
+4. clarifies one material product decision at a time;
+5. separates Confirmed, Proposed, and Out-of-Scope behavior;
+6. makes significant technical architecture decisions in the planning stage;
+7. gets user approval for the product/design direction;
+8. writes concise durable product/spec/architecture artifacts;
+9. audits those artifacts for missing decisions and contradictions;
+10. creates an explicit implementation strategy and dependency graph;
+11. materializes that graph as multiple native Hermes Kanban tasks when the work is substantial;
+12. routes each task to a suitable worker profile by capability rather than by a hardcoded name;
+13. finishes through a native Kanban review/acceptance topology.
+
+NormalPowers does not make the planner a coding agent and does not use Superpowers subagent-driven execution.
 
 ## Install
 
-Install it only into the Main Hermes profile:
+Install NormalPowers into whichever Hermes profile acts as the planner/orchestrator:
 
 ```bash
-HERMES_HOME=~/.hermes/profiles/main \
+HERMES_HOME=~/.hermes/profiles/<planner-profile> \
   hermes plugins install arttvad9r/NormalPowers --enable
 ```
 
-Then start a **fresh Main session**. NormalPowers registers its routing rules as a cache-safe Hermes system-prompt section when a new session is created. Hermes freezes that section into the session prompt, so it survives context compression and process resume. Updating the plugin does not rewrite an already-existing session prompt; start a new session after updating NormalPowers.
-
-Do not install NormalPowers into Developer for the initial setup. Developer should continue using its existing engineering, Android, Gradle, test, repository, and worktree tooling.
-
-### Verify the install
+For a production setup, prefer pinning a reviewed full commit SHA:
 
 ```bash
-HERMES_HOME=~/.hermes/profiles/main \
+HERMES_HOME=~/.hermes/profiles/<planner-profile> \
+  hermes plugins install arttvad9r/NormalPowers \
+  --ref <reviewed-40-character-commit-sha> --enable
+```
+
+Then restart the affected Hermes gateway/profile as appropriate and start a **fresh planner session**. NormalPowers registers a cache-safe Hermes system-prompt section; existing session prompts are not rewritten by a plugin update.
+
+Do not install NormalPowers into execution-only workers unless you intentionally want those profiles to act as planners too. Worker constraints are carried in the Kanban cards and durable project artifacts.
+
+### Verify
+
+```bash
+HERMES_HOME=~/.hermes/profiles/<planner-profile> \
   hermes plugins doctor normalpowers --ci
 ```
 
-You can also confirm that it is enabled with:
-
 ```bash
-HERMES_HOME=~/.hermes/profiles/main \
+HERMES_HOME=~/.hermes/profiles/<planner-profile> \
   hermes plugins list
 ```
 
-## Recommended Main role boundary
+## Kanban configuration
 
-Keep SOUL/profile instructions short. A sufficient role statement is:
-
-```text
-Main is the user's primary software planning and coordination authority.
-Main owns user interaction, discovery, research, product decisions,
-specification, planning, delegation, and final acceptance.
-Substantial implementation belongs to Developer and is delegated through Hermes Kanban.
-```
-
-The workflow details belong in this plugin, not in SOUL.md.
-
-## Recommended Kanban configuration
+NormalPowers assumes planning/decomposition happens **before** work reaches workers. Keep Kanban auto-decomposition disabled:
 
 ```yaml
 kanban:
-  orchestrator_profile: main
-  default_assignee: developer
   auto_decompose: false
 ```
 
-NormalPowers already performs the meaningful decomposition before handoff. A second automatic Kanban decomposition pass would create competing planning decisions.
+Profile names, orchestrator profile, and default worker routing belong to Hermes deployment configuration, not to this plugin.
 
-## Automatic behavior
+`kanban_create` itself requires an explicit assignee. During planning, NormalPowers selects a suitable profile from the currently available Hermes roster/capability descriptions or from explicit deployment instructions. It never assumes a profile literally named `developer`.
 
-Typical requests that should enter NormalPowers planning:
+## What Kanban should look like
 
-- "I want to build an Android app..."
-- "Add this user-facing feature..."
-- "Redesign this flow..."
-- "Change this product behavior..."
-- "We need to choose an architecture for..."
+A substantial project should not arrive at a worker as one card saying `Implement the whole project`.
 
-Typical requests that do not need the full planning workflow:
+Instead the planner creates a dependency graph of coherent, independently verifiable slices, for example:
 
-- run a build or test;
-- fix an obvious compile failure;
-- update a known dependency version;
-- change a typo or literal value;
-- inspect logs or repository state;
-- perform other mechanical work where desired behavior is already fully determined.
+```text
+Foundation
+   ├──> Persistence / data contracts ──┐
+   └──> App shell / navigation ────────┤
+                                       ├──> Core feature flows
+                                       │        ├──> Budgets
+                                       │        └──> History / editing
+                                       └───────────────┬──────────────
+                                                       v
+                                             Integration / acceptance
+```
 
-Those can be delegated directly to Developer through Kanban.
+Each worker card contains:
+
+- **Goal** — the concrete outcome;
+- **Why** — why this slice exists and what depends on it;
+- **Source of truth** — relevant spec/product/architecture paths;
+- **Dependencies / inputs** — prerequisite task IDs and shared contracts;
+- **Scope** — included outcomes and explicit exclusions;
+- **Decided technical constraints** — technologies, interfaces, invariants, persistence/migration rules;
+- **Acceptance criteria**;
+- **Verification**;
+- **Evidence** expected on completion;
+- **Decision boundary** telling the worker what must be escalated instead of improvised.
+
+Task granularity is intentionally between two bad extremes: neither one giant project card nor one card per file/function.
+
+## Review topology
+
+Hermes supports two useful native models. NormalPowers chooses one per graph.
+
+### Multi-task project — downstream acceptance task
+
+Default for a new project or broad feature:
+
+```text
+implementation task A --\
+implementation task B ----> integration / QA / acceptance
+implementation task C --/
+```
+
+Workers complete leaf cards with structured evidence. The final acceptance card depends on all terminal implementation tasks and is assigned to the planner/orchestrator or an explicitly configured reviewer/QA profile.
+
+This avoids paying the strongest planning model to review every trivial leaf task while still giving the final assembled result an explicit gate.
+
+### Single bounded task — same-card review
+
+For one coherent change, the worker may use `kanban_request_review(..., reviewer=<resolved reviewer profile>)`, after which the planner/reviewer accepts or requests concrete changes.
+
+Do not combine same-card review with a pre-created downstream review child for the same task.
+
+## Worker decision policy
+
+Worker discretion should be small, not zero.
+
+Workers may decide local reversible mechanics such as private names, tiny refactors, and equivalent implementation details that do not affect shared contracts.
+
+Workers must escalate instead of deciding when the change would affect:
+
+- approved product behavior or scope;
+- persistent-data semantics or migrations;
+- architecture/component boundaries;
+- significant external dependencies;
+- public or cross-task APIs/contracts;
+- integration ordering/dependencies;
+- acceptance criteria;
+- the planned task decomposition.
+
+A missing material decision is a planning defect, not an invitation for a cheaper worker to invent the project.
+
+## Brainstorming scope discipline
+
+NormalPowers keeps three explicit buckets:
+
+- **Confirmed** — user-requested or explicitly approved product requirements;
+- **Proposed** — optional product suggestions awaiting approval;
+- **Out of Scope** — behavior not required now.
+
+Only Confirmed behavior becomes product scope. For a fresh request, old memory/session/Wiki material cannot silently become Confirmed requirements.
+
+Technical decisions are different: once product intent is clear, the planner is expected to research and choose an appropriate architecture rather than asking the user to choose every library or pushing those choices to workers.
 
 ## Project artifacts
 
 NormalPowers deliberately does not create `docs/superpowers/...`.
 
-Durable project truth is stored in conventional locations:
+Durable truth lives in conventional project locations:
 
 ```text
 project/
@@ -114,38 +217,37 @@ project/
         └── <adr>.md
 ```
 
-Rules:
+- `specs/` — intended observable behavior and acceptance-relevant constraints;
+- `docs/product.md` — long-lived product purpose/scope/principles;
+- `docs/architecture.md` — selected stack, component boundaries, data/contracts, persistence/integration/migration/testing constraints that workers must follow;
+- `docs/decisions/` — only significant durable decisions whose rationale matters later;
+- code/tests — actual implementation state;
+- Hermes Kanban — execution plan/state, dependencies, worker handoffs, and evidence.
 
-- `specs/` describes intended observable behavior.
-- `docs/product.md` holds long-lived product scope and principles for a new product.
-- `docs/architecture.md` holds long-lived architecture, not implementation trivia.
-- ADRs are created only for significant durable architectural decisions.
-- implementation plans are operational and belong in the Kanban handoff by default, not in a permanent `docs/plans/` archive.
+NormalPowers does not keep a permanent chronological `docs/plans/` archive by default. The execution plan is represented by the Kanban graph plus each card's explicit contract.
 
-## Skills and routing
+## Skills
 
 The plugin registers three Hermes skills:
 
-- `normalpowers:using-normalpowers` — detailed routing and role-boundary reference;
-- `normalpowers:brainstorming` — discovery, research, design, approval, and concise specification;
-- `normalpowers:writing-plans` — implementation brief and Kanban handoff to Developer.
+- `normalpowers:using-normalpowers` — routing and role model;
+- `normalpowers:brainstorming` — research, product/design decisions, architecture, approval, durable artifacts;
+- `normalpowers:writing-plans` — implementation strategy, decomposition, Kanban graph, routing, and acceptance topology.
 
-A compact always-on routing section tells Main when to load the two active workflow skills. It is deliberately much smaller than the full skill text and is stored in Hermes' cached system prompt so long-running Main sessions remain consistent across context compression.
-
-Manual skill invocation should rarely be necessary. For debugging, the skills can be inspected with Hermes' native `skill_view("normalpowers:<skill>")` mechanism.
+A compact always-on system-prompt section tells the planner when to load the active skills. It is stored in Hermes' cached system prompt so the routing survives context compression.
 
 ## Source-of-truth boundaries
 
 ```text
-Desired product behavior -> specs/ and product docs
-Architecture             -> docs/architecture.md and ADRs
-Current implementation   -> code and tests
-Execution state          -> Hermes Kanban
-Long-term agent context  -> Mnemosyne
-Reference knowledge      -> Wiki
+Product behavior         -> specs/ + product docs
+Technical architecture   -> docs/architecture.md + ADRs
+Actual implementation    -> code + tests
+Execution plan/state     -> Hermes Kanban graph
+Long-term personal context -> memory
+Reference knowledge      -> Wiki / research sources
 ```
 
-Kanban, Wiki, and memory must not silently replace approved product requirements.
+Memory, Wiki, Kanban prose, or worker improvisation must not silently replace approved product/architecture truth.
 
 ## Upstream
 
