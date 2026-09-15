@@ -10,13 +10,19 @@ PLUGIN_PATH = REPO_ROOT / "__init__.py"
 class FakeContext:
     def __init__(self):
         self.skills = {}
-        self.hooks = {}
+        self.system_prompt_sections = {}
 
     def register_skill(self, name, path):
         self.skills[name] = path
 
-    def register_hook(self, name, callback):
-        self.hooks[name] = callback
+    def register_system_prompt_section(
+        self, section_id, content, *, position="after_memory", max_chars=4000
+    ):
+        self.system_prompt_sections[section_id] = {
+            "content": content,
+            "position": position,
+            "max_chars": max_chars,
+        }
 
 
 def load_plugin_module():
@@ -44,33 +50,31 @@ class NormalPowersPluginTests(unittest.TestCase):
             self.assertTrue(skill_path.is_file())
             self.assertEqual(skill_path.name, "SKILL.md")
 
-    def test_registers_pre_llm_call_hook(self):
+    def test_registers_compression_safe_routing_section(self):
         ctx = FakeContext()
         self.plugin.register(ctx)
 
-        self.assertIn("pre_llm_call", ctx.hooks)
+        self.assertEqual(set(ctx.system_prompt_sections), {"normalpowers.routing"})
+        section = ctx.system_prompt_sections["normalpowers.routing"]
 
-    def test_bootstrap_is_injected_only_on_first_turn(self):
-        ctx = FakeContext()
-        self.plugin.register(ctx)
-        hook = ctx.hooks["pre_llm_call"]
+        self.assertEqual(section["position"], "after_memory")
+        self.assertEqual(section["max_chars"], self.plugin.ROUTING_MAX_CHARS)
+        self.assertLessEqual(len(section["content"]), section["max_chars"])
+        self.assertIn("normalpowers:brainstorming", section["content"])
+        self.assertIn("normalpowers:writing-plans", section["content"])
+        self.assertIn("Kanban", section["content"])
+        self.assertIn("Developer owns substantial implementation", section["content"])
 
-        first_turn = hook(is_first_turn=True)
-        later_turn = hook(is_first_turn=False)
+    def test_routing_section_does_not_force_planning_on_mechanical_work(self):
+        content = self.plugin.ROUTING_SECTION
 
-        self.assertIsInstance(first_turn, dict)
-        self.assertIn("context", first_turn)
-        self.assertIn(self.plugin.BOOTSTRAP_MARKER, first_turn["context"])
-        self.assertIn("normalpowers:brainstorming", first_turn["context"])
-        self.assertIn("normalpowers:writing-plans", first_turn["context"])
-        self.assertIsNone(later_turn)
+        self.assertIn("Do not force the full workflow onto mechanical work", content)
+        self.assertIn("compile error", content)
+        self.assertIn("version bump", content)
 
-    def test_bootstrap_frontmatter_is_not_injected(self):
-        skills_dir = self.plugin._skills_dir()
-        bootstrap = self.plugin._build_bootstrap(skills_dir)
-
-        self.assertNotIn("name: using-normalpowers", bootstrap)
-        self.assertIn("# Using NormalPowers", bootstrap)
+    def test_routing_section_id_and_size_are_bounded(self):
+        self.assertEqual(self.plugin.ROUTING_SECTION_ID, "normalpowers.routing")
+        self.assertLessEqual(len(self.plugin.ROUTING_SECTION), 3000)
 
 
 if __name__ == "__main__":
