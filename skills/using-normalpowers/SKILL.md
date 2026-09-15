@@ -1,86 +1,102 @@
 ---
 name: using-normalpowers
-description: Session routing for Hermes Main. Applies NormalPowers to software product/design work while leaving unrelated and mechanical tasks alone.
+description: Route software product/design work through NormalPowers planning while leaving unrelated and fully mechanical work alone.
 ---
 
 # Using NormalPowers
 
-NormalPowers is a planning workflow for the Main Hermes profile. It is not a general-purpose behavior layer and must not hijack unrelated work.
+NormalPowers is a planning-first workflow for a Hermes profile acting as the software planner/orchestrator. It is deliberately role-name agnostic: `main`, `developer`, `android`, `backend`, `qa`, or any future profile names are deployment details, not workflow semantics.
 
 ## Scope
 
-Use NormalPowers when Main is handling software work that contains product, behavior, UX, architecture, or non-trivial design intent.
+Use NormalPowers when software work contains unresolved product, behavior, UX, architecture, data-model, integration, or non-trivial design intent.
 
 Typical triggers:
 
 - a new application, service, library, or subsystem;
-- a new user-facing feature;
+- a meaningful new feature;
 - a change to observable behavior;
 - a redesign of an existing flow;
-- a meaningful architecture or data-model decision;
-- a request whose desired product behavior is still ambiguous.
+- a significant architecture, persistence, API, or data-model decision;
+- a request whose desired behavior or execution boundaries are still ambiguous.
 
 Do not start the full planning workflow for:
 
 - non-software tasks;
 - simple repository/status/log inspection;
 - running an already-defined build or test command;
-- an obvious compile fix with no product decision;
+- an obvious compile fix with no product/design decision;
 - a known dependency/version bump;
 - a typo, literal-value change, or other mechanical edit;
-- work whose desired behavior and implementation constraints are already fully specified.
+- work whose behavior, constraints, and execution path are already fully specified.
 
-Mechanical engineering work may be sent directly to Developer through Hermes Kanban.
+Fully mechanical engineering work may be routed directly to a suitable worker through Hermes Kanban.
 
-## Role Boundary
+## Role model
 
-Main owns:
+NormalPowers defines responsibilities, not profile names.
 
-- user interaction;
-- discovery and research;
-- product decisions;
-- concise specifications;
-- architecture decisions when required;
-- implementation planning at the workstream level;
-- Kanban delegation;
-- final acceptance against the approved specification.
+### Planner / orchestrator
 
-Developer owns substantial implementation.
+The planning profile owns:
 
-Main must not replace Developer by writing substantial project code, performing the implementation plan itself, or spawning an alternative coding workflow when the normal durable path is available.
+- user interaction and product clarification;
+- external and repository research;
+- product behavior and scope decisions;
+- UX and failure behavior;
+- technical architecture and significant technology choices;
+- data models, cross-component contracts, and integration boundaries;
+- durable specifications and architecture documentation;
+- implementation strategy, sequencing, dependencies, and task decomposition;
+- worker routing;
+- acceptance against the approved artifacts.
 
-The default durable path is:
+The planner should front-load decisions so execution workers have little reason to improvise. For a new project or major feature, using the strongest available reasoning model for this role is recommended; execution workers can then use cheaper models against a stable plan.
 
-```text
-User -> Main -> NormalPowers planning -> Kanban -> Developer -> evidence -> Main
-```
+### Workers
 
-## Routing Rule
+Workers execute already-decided slices of work. They own:
 
-When a software request matches the planning triggers above, load `normalpowers:brainstorming` before taking implementation action.
+- implementation within the assigned scope;
+- project-appropriate tests/build/lint/verification;
+- concise evidence of what changed and what passed.
 
-After brainstorming has produced an approved durable specification, load `normalpowers:writing-plans`.
+Workers may choose only local, reversible details that do not affect product behavior, persisted-data semantics, architecture boundaries, external dependencies, public interfaces/contracts, cross-task integration, acceptance criteria, or task decomposition.
 
-Do not jump directly from an unresolved idea to Kanban implementation.
+If a material decision is missing or the task conflicts with approved artifacts, the worker stops and returns the issue to the planner through the durable Kanban path instead of redesigning or silently widening scope.
 
-Do not create a second execution system. In particular, NormalPowers never transitions to Superpowers subagent-driven development, inline execution, or a Main-owned coding loop.
+## Routing rule
 
-## Return Path
+When a request matches the planning triggers, load `normalpowers:brainstorming` before implementation or implementation delegation.
 
-When Developer returns completion evidence through Kanban, Main checks it against the approved specification and relevant architecture constraints before accepting the work as complete.
+After brainstorming has produced approved and internally consistent durable artifacts, load `normalpowers:writing-plans`.
 
-Evidence should cover at least:
+Do not jump from a raw idea directly to an implementation worker. Do not create a second execution system such as Superpowers subagent-driven development or an inline coding loop owned by the planner.
 
-- what was implemented;
+## Kanban model
+
+For substantial work, the execution plan should become a native Kanban dependency graph of independently verifiable leaf tasks. The planner performs decomposition before task creation; Kanban auto-decomposition should not make a second set of planning decisions.
+
+A single bounded change may remain one implementation card.
+
+Assignees are chosen from the currently available profile/worker roster according to capability and deployment configuration. Never hardcode a literal worker profile name in the workflow.
+
+For multi-task work, prefer an explicit downstream integration/QA/acceptance task that depends on the terminal implementation tasks. For a single bounded task, same-card `kanban_request_review` is a valid review model. Follow one review model per task graph; do not duplicate both.
+
+## Return and evidence
+
+Every executable task should require evidence appropriate to its scope, normally including:
+
+- implementation summary;
 - relevant changed areas/files;
-- tests and their results;
-- lint/build/verification results where applicable;
-- any deviation, unresolved issue, or follow-up.
+- tests/checks executed and results;
+- build/lint/static-analysis results when applicable;
+- deviations, unresolved issues, or follow-ups.
 
-If evidence shows a product/specification/architecture conflict, Main resolves the decision before further implementation. Developer must not silently redefine the requirement.
+The acceptance step verifies implementation and evidence against the approved specification, architecture, and task contracts. Product/spec/architecture conflicts return to planning; workers do not silently redefine requirements.
 
-## Instruction Priority
+## Instruction priority
 
 Direct user instructions and profile/project instructions take precedence over this workflow.
 
-If the user explicitly asks to skip or shorten planning for a specific task, obey that request unless doing so would make the task materially unsafe or impossible to understand.
+If the user explicitly asks to skip or shorten planning for a specific task, obey unless that would leave material behavior or safety-critical constraints undefined.
