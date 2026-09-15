@@ -90,7 +90,7 @@ class NormalPowersPluginTests(unittest.TestCase):
     def test_writing_plan_separates_execution_design_from_kanban_state(self):
         content = (REPO_ROOT / "skills" / "writing-plans" / "SKILL.md").read_text()
 
-        self.assertIn("one living execution design", content)
+        self.assertIn("single living execution design", content)
         self.assertIn("plans/<feature>.md", content)
         self.assertIn("Kanban is execution state, not the sole plan artifact", content)
         self.assertIn("Execution design: `plans/<feature>.md#<specific-section>`", content)
