@@ -1,17 +1,17 @@
 ---
 name: brainstorming
-description: Use before non-trivial software product/design work. Turns a raw idea into approved, concise durable specs without starting implementation.
+description: Use before non-trivial software product/design work. Turns a raw idea into approved product, architecture, and concise durable specs before execution planning.
 ---
 
 # Brainstorming
 
-Turn a raw software idea into an approved design and durable specification before implementation begins.
+Turn a raw software idea into an approved design and sufficiently decided architecture before implementation begins.
 
-## Hard Gate
+## Hard gate
 
-Do not write substantial project code, scaffold the application, or delegate implementation to Developer until the intended behavior/design has been presented and approved by the user.
+Do not write substantial project code, scaffold the product, or delegate implementation until the intended behavior and significant design/architecture have been presented and approved by the user.
 
-Planning artifacts are allowed before implementation. For a brand-new project, Main may create the project directory/repository after approval solely to store planning documents; do not scaffold product code at that stage.
+Planning artifacts are allowed before implementation. For a brand-new project, the planner may create the project directory/repository after approval solely to store planning documents; do not scaffold product code at that stage.
 
 ## First: classify the request
 
@@ -19,12 +19,10 @@ Choose the lightest path that preserves correctness.
 
 ### 1. Spike
 
-Use for feasibility/research questions where the output is knowledge, not production code.
-
-Flow:
+Use for feasibility/research questions where the output is knowledge rather than production implementation.
 
 ```text
-frame the question -> get approval for the probe -> investigate -> report recommendation
+frame the question -> investigate -> report recommendation
 ```
 
 Do not create durable product specs unless the user turns the finding into an implementation request.
@@ -33,121 +31,127 @@ Do not create durable product specs unless the user turns the finding into an im
 
 Use when an existing system already contains the flow being changed and the requested behavior is narrow.
 
-Examples: a small user-visible behavior change, a focused interaction change, a contained feature extension.
-
-Flow:
-
 ```text
-inspect context -> clarify only what matters -> present short design -> user approves -> write concise spec if observable behavior changes -> writing-plans
+inspect context -> clarify material ambiguity -> decide design -> user approval -> concise spec/architecture update if needed -> writing-plans
 ```
 
-Purely mechanical work with no product/design decision should not have entered this skill; route it directly to Developer through Kanban.
+Purely mechanical work with no product/design decision should not have entered this skill.
 
 ### 3. Architectural / new project
 
-Use for new products, new subsystems, broad features, new data models, or changes that affect long-lived interfaces/architecture.
-
-Flow:
+Use for new products, new subsystems, broad features, new persistent data models, or changes that affect long-lived interfaces/architecture.
 
 ```text
-understand intent -> research -> clarify -> compare approaches -> present design -> user approves -> write durable docs/spec -> writing-plans
+understand intent -> research -> clarify product choices -> decide architecture -> present design -> user approval -> durable artifacts -> writing-plans
 ```
 
 When uncertain between bounded and architectural, choose architectural.
 
-## Understand before proposing
+## Scope discipline
+
+Maintain three explicit buckets throughout planning:
+
+- **Confirmed** — behavior, constraints, and goals stated or approved by the user in the current planning conversation. A previous-session item enters this bucket only after the user explicitly asks to reuse it or re-confirms it.
+- **Proposed** — an optional product idea or alternative awaiting user approval. It is not a requirement.
+- **Out of Scope** — behavior not required for the current scope. Unrequested adjacent features belong here by default.
+
+Never promote an unrequested feature into the MVP. Do not turn common adjacent ideas such as export, sync, recurring operations, themes, analytics, or advanced filters into requirements merely because similar products often contain them.
+
+Prefer the narrowest product that fully satisfies Confirmed behavior.
+
+## Session and memory boundary
+
+Treat a new raw product request as a clean product scope unless the user explicitly says to continue, reuse, or modify a named earlier design/specification.
+
+- Memory, prior sessions, Wiki notes, and unrelated repository history may inform research, but they are never Confirmed requirements by themselves.
+- Do not say or imply that saved context has supplied current requirements.
+- Do not copy old answers into the current MVP.
+- If prior material seems relevant but reuse was not requested, ignore it for scope.
+- When reuse is explicitly requested, summarize candidate prior decisions as Proposed and re-confirm the material ones before treating them as current truth.
+
+## Understand before deciding
 
 For an existing repository:
 
-- inspect relevant code, tests, documentation, and current conventions;
-- follow established architecture unless there is a concrete reason not to;
-- identify constraints that are already encoded in the repository;
+- inspect relevant code, tests, docs, build files, and current conventions;
+- preserve established architecture when it remains suitable;
+- identify existing contracts and migration constraints;
 - avoid unrelated cleanup or redesign.
 
 For a new project:
 
-- do not require a pre-existing repository to begin brainstorming;
-- understand the product before choosing libraries or architecture;
-- keep the initial scope deliberately small.
+- do not require a pre-existing repository to begin planning;
+- understand the product before choosing the stack;
+- keep scope deliberately small;
+- deliberately choose enough of the technical foundation that workers do not need to invent it later.
 
-## Memory hygiene
+## Research before technical decisions
 
-Treat a fresh project or fresh brainstorming request as a clean product context by default.
-
-Long-term memory, prior sessions, Wiki notes, and remembered project details are background context, not product requirements.
-
-Rules:
-
-- Do not silently reuse requirements, scope, architecture, feature choices, defaults, or product decisions from a previous project/session.
-- Do not present remembered project details as if the user stated them in the current brainstorming session.
-- Only carry prior project decisions forward when the user explicitly indicates they are continuing the same project, references the prior work, or explicitly confirms the remembered details.
-- Stable user preferences may inform presentation or recommendations, but must not become product requirements unless they are relevant and confirmed.
-- If remembered context appears relevant but project identity is uncertain, ask whether this is the same project before using it.
-- For a clearly new project, ignore project-specific remembered details and derive the specification from the current conversation and repository only.
-
-During brainstorming, keep three conceptual buckets separate:
-
-```text
-CONFIRMED    = explicitly stated or approved in the current project context
-PROPOSED     = agent suggestions that still require approval
-OUT OF SCOPE = not required for the current MVP unless the user asks for it
-```
-
-Never promote `PROPOSED` or remembered content into `CONFIRMED` without explicit approval.
-
-## Research when facts matter
-
-Use external research when a decision depends on current or uncertain facts such as:
+Research current external facts whenever they materially affect the design, including:
 
 - platform APIs and version support;
-- library maturity or current recommendations;
+- current official architecture guidance;
+- library/tool maturity and compatibility;
 - security/privacy constraints;
-- protocol or service capabilities;
-- ecosystem/tooling compatibility.
+- persistence or protocol choices;
+- ecosystem/tooling limitations.
 
-Research should answer a decision, not become an open-ended report. Prefer existing/native/platform-supported solutions over custom machinery when they satisfy the requirement.
+Research should answer concrete decisions. Prefer native, official, mature solutions over custom machinery when they satisfy the requirement.
+
+## Planner decision authority
+
+The planner is expected to make high-quality technical decisions, not defer them wholesale to execution workers.
+
+For significant work, decide and document as applicable:
+
+- target platform/runtime and supported versions;
+- major technologies/libraries where the choice affects the architecture;
+- module/component boundaries and responsibilities;
+- data ownership, persistent model, and important invariants;
+- public/internal cross-component interfaces and contracts;
+- error/failure and migration behavior;
+- integration strategy and ordering constraints;
+- testing/verification strategy;
+- constraints that downstream workers must preserve.
+
+Do not ask the user to choose routine technical details merely to avoid responsibility. Escalate a technical choice to the user when it materially changes product behavior, UX, cost, privacy, irreversible constraints, maintenance burden, or an explicit user preference.
+
+Concrete architectural choices are appropriate in `docs/architecture.md` when the planner has researched and intentionally selected them. Do not over-specify private code structure, line-level edits, or details that have no cross-task consequence.
 
 ## Clarification discipline
 
-Ask questions only for decisions that materially affect the result.
+Ask only for decisions that materially affect product behavior, data ownership/semantics, meaningful UX, important trade-offs, or acceptance criteria.
 
-- Ask one question at a time.
-- Prefer concrete alternatives when possible.
-- Focus on purpose, success criteria, constraints, non-goals, UX behavior, data ownership, and failure behavior.
-- Do not ask the user to decide routine implementation details that Developer can safely choose later.
-- Do not silently invent product requirements to fill gaps.
-- Do not introduce unrequested features into the MVP merely because they are common or useful.
-- When a conservative narrow default fully preserves the user's stated intent, prefer that default over opening an unnecessary product decision.
-- Clearly label optional ideas as proposals rather than requirements.
+- Ask one material product decision at a time.
+- Prefer concrete alternatives when useful.
+- State current Confirmed scope and conservative defaults before asking the next question.
+- Do not ask about unrequested adjacent features; keep them Out of Scope unless their absence blocks Confirmed behavior.
+- Do not ask the user to decide routine engineering implementation details that the planner can resolve through research.
+- Do not use remembered prior-session requirements to answer a current clarification question.
 
-If the request contains several independent products/subsystems, decompose the scope before refining details and start with the first independently useful slice.
+## Explore real alternatives
 
-## Explore approaches
+When there is a meaningful product or architectural choice, compare 2-3 viable approaches with trade-offs and make a recommendation.
 
-When there is a meaningful design choice, present 2-3 viable approaches with trade-offs and a recommendation.
+Do not manufacture fake alternatives for obvious decisions. Apply YAGNI aggressively.
 
-Do not manufacture fake alternatives for obvious decisions.
+## Present the design for approval
 
-Apply YAGNI aggressively. The recommended design should be the smallest design that fully satisfies the approved behavior and constraints.
+Before implementation, present a concise design that lets the user verify intent without drowning them in engineering trivia.
 
-## Present the design
+Include as applicable:
 
-Scale the design to the task. Cover only the dimensions that materially matter:
+- Confirmed product scope and explicit non-goals;
+- key user flows and failure behavior;
+- significant architecture and technology decisions;
+- data ownership/persistence semantics;
+- meaningful integrations/contracts;
+- important trade-offs or constraints;
+- verification strategy.
 
-- product behavior and key user flows;
-- UX/state transitions;
-- components and responsibilities;
-- data ownership and persistence;
-- external integrations;
-- error/failure behavior;
-- testing/verification strategy;
-- compatibility or migration concerns.
+Product suggestions still awaiting approval remain Proposed and must not be smuggled into the design.
 
-For a bounded change, this may be a few paragraphs.
-
-For architectural work, present the design in sections and allow the user to correct assumptions before finalizing it.
-
-Do not move to implementation until the user explicitly approves the design.
+Do not move to execution planning until the user explicitly approves the product/design direction.
 
 ## Durable artifacts
 
@@ -155,7 +159,7 @@ NormalPowers does not create `docs/superpowers/...`.
 
 ### New project
 
-After the design is approved, create or update as needed:
+After approval, create or update as needed:
 
 ```text
 docs/product.md
@@ -163,41 +167,39 @@ docs/architecture.md
 specs/initial-scope.md
 ```
 
-`docs/product.md` should contain durable product truth only:
+`docs/product.md` contains durable product truth:
 
-- purpose;
-- target user/use case;
+- purpose and target user/use case;
 - primary workflows;
-- scope and explicit non-goals;
-- important product principles/constraints.
+- approved scope;
+- explicit non-goals;
+- important product principles and behavioral rules.
 
-`docs/architecture.md` should contain durable architecture only:
+`docs/architecture.md` contains durable technical truth needed to constrain execution:
 
-- major components and boundaries;
-- data flow and ownership;
-- persistence and external interfaces;
-- key technologies where they are architectural constraints;
-- important testing/deployment constraints.
+- selected platform/stack and significant technologies;
+- major components/modules and responsibilities;
+- data model, ownership, persistence, and important invariants;
+- cross-component/external interfaces;
+- migration/compatibility constraints;
+- testing/deployment constraints that shape implementation;
+- rationale for significant choices when it prevents later re-litigation.
 
-Do not turn either file into a chronological design diary.
+Use ADRs under `docs/decisions/` only for significant durable decisions whose alternatives/rationale will matter later.
 
 ### Existing product / feature
 
-For a meaningful observable behavior change, create or update:
+For meaningful observable behavior changes, create or update:
 
 ```text
 specs/<feature-or-change>.md
 ```
 
-Update `docs/product.md` only when long-lived product scope/principles change.
-
-Update `docs/architecture.md` only when long-lived architecture changes.
-
-Create an ADR in `docs/decisions/` only for a significant durable architectural decision whose rationale will matter later. Do not create ADRs for routine implementation choices.
+Update product/architecture docs only when their long-lived truth actually changes.
 
 ## Specification format
 
-A feature/scope spec should be concise and normative. Use this shape when applicable:
+Use concise normative specs. A useful default shape is:
 
 ```markdown
 # <Feature or Scope>
@@ -222,7 +224,7 @@ Then ...
 
 ## Constraints
 
-- Exact constraints that implementation must preserve.
+- Exact constraints implementation must preserve.
 
 ## Out of Scope
 
@@ -231,31 +233,29 @@ Then ...
 
 Rules:
 
-- describe what the system must do, not the exact code Developer should write;
-- every important requirement should be testable or observable;
-- use concrete scenarios for edge cases and state transitions;
-- avoid implementation details unless they are part of the required contract;
+- describe what the system must do, not private code mechanics;
+- every important requirement should be observable or verifiable;
+- make edge cases and state transitions concrete where ambiguity matters;
+- include implementation constraints only when they are part of the approved contract or architecture;
 - avoid speculative future requirements;
-- do not add sections that carry no useful information.
+- omit sections that carry no useful information.
 
-## Self-review before handoff
+## Decision and consistency audit
 
-Before moving on, check the written artifacts for:
+Before execution planning, explicitly audit the artifacts:
 
-1. missing or contradictory requirements;
-2. vague words that permit materially different implementations;
-3. hidden scope expansion;
-4. architecture choices unsupported by the approved design;
-5. requirements that cannot be verified;
-6. implementation detail accidentally presented as product truth;
-7. remembered or proposed requirements that were never confirmed in the current project context.
+1. Every material product behavior is Confirmed or clearly Out of Scope.
+2. Every significant technical choice needed by workers is decided or intentionally delegated as a harmless local detail.
+3. No important cross-task interface, persistent-data rule, migration rule, or dependency boundary is left for a worker to invent.
+4. Product, spec, and architecture documents do not contradict each other.
+5. No Proposed or remembered requirement was silently promoted to approved truth.
+6. Acceptance-relevant requirements are testable/verifiable.
+7. Concrete technology choices are supported by research or existing project constraints.
 
-Fix issues directly.
-
-If writing the document introduces a new substantive decision that the user did not approve, present that decision and get approval before continuing.
+If a new product decision appears while writing the docs, return it to the user. If a new technical decision appears, research and resolve it here unless it crosses the user-escalation boundary above.
 
 ## Transition
 
-Once the durable specification is approved and internally consistent, load `normalpowers:writing-plans`.
+Once the approved durable artifacts are internally consistent and material design decisions are closed, load `normalpowers:writing-plans`.
 
-Do not invoke an implementation skill and do not implement the plan in Main.
+Do not implement the project in the planning profile.
