@@ -87,6 +87,21 @@ class NormalPowersPluginTests(unittest.TestCase):
         self.assertIn("compile error", content)
         self.assertIn("version bump", content)
 
+    def test_brainstorming_requires_two_pass_research_and_source_quality(self):
+        content = (REPO_ROOT / "skills" / "brainstorming" / "SKILL.md").read_text()
+
+        self.assertIn("reconnaissance research", content)
+        self.assertIn("decision-focused technical research", content)
+        self.assertIn("both research passes are required", content)
+        self.assertIn("do not rely on model memory", content)
+        self.assertIn("official platform/library documentation", content)
+        self.assertIn(
+            "Do not ask the user a question that current research can answer",
+            content,
+        )
+        self.assertIn("conservative, reversible default", content)
+        self.assertIn("Do not batch a generic setup questionnaire", content)
+
     def test_writing_plan_separates_execution_design_from_kanban_state(self):
         content = (REPO_ROOT / "skills" / "writing-plans" / "SKILL.md").read_text()
 

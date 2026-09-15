@@ -32,7 +32,7 @@ Do not create durable product specs unless the user turns the finding into an im
 Use when an existing system already contains the flow being changed and the requested behavior is narrow.
 
 ```text
-inspect context -> clarify material ambiguity -> decide design -> user approval -> concise spec/architecture update if needed -> writing-plans
+inspect context -> targeted research if needed -> clarify material ambiguity -> decide design -> user approval -> concise spec/architecture update if needed -> writing-plans
 ```
 
 Purely mechanical work with no product/design decision should not have entered this skill.
@@ -42,8 +42,19 @@ Purely mechanical work with no product/design decision should not have entered t
 Use for new products, new subsystems, broad features, new persistent data models, or changes that affect long-lived interfaces/architecture.
 
 ```text
-understand intent -> research -> clarify product choices -> decide architecture -> present design -> user approval -> durable artifacts -> writing-plans
+frame intent
+-> reconnaissance research
+-> clarify material product choices
+-> confirm product direction
+-> decision-focused technical research
+-> decide architecture
+-> present design
+-> user approval
+-> durable artifacts
+-> writing-plans
 ```
+
+For this path, both research passes are required unless external research is genuinely irrelevant to the decisions being made. Do not collapse them into model-memory reasoning merely because the planner already knows a plausible answer.
 
 When uncertain between bounded and architectural, choose architectural.
 
@@ -81,22 +92,71 @@ For an existing repository:
 For a new project:
 
 - do not require a pre-existing repository to begin planning;
-- understand the product before choosing the stack;
+- understand the product before finalizing the stack;
 - keep scope deliberately small;
 - deliberately choose enough of the technical foundation that workers do not need to invent it later.
 
-## Research before technical decisions
+## Two-pass research for architectural / new-project work
 
-Research current external facts whenever they materially affect the design, including:
+Research is part of brainstorming, not an optional verification step after the design has already been invented.
 
-- platform APIs and version support;
-- current official architecture guidance;
-- library/tool maturity and compatibility;
-- security/privacy constraints;
-- persistence or protocol choices;
-- ecosystem/tooling limitations.
+### Pass 1 — reconnaissance research
+
+After the raw intent is framed, research enough current context to understand the real solution space before asking most product questions.
+
+Use this pass to discover, as applicable:
+
+- current platform capabilities and constraints that shape feasible product options;
+- current ecosystem patterns and official recommendations;
+- domain conventions or common interaction models that materially affect product choices;
+- which apparent choices are genuine user/product decisions versus questions that research can answer;
+- current limitations that would make a proposed direction expensive, brittle, unsafe, or obsolete.
+
+This pass should improve the questions. It should not prematurely lock a detailed technical stack while the product direction is still unclear.
+
+The planner may still ask an early question before reconnaissance when the raw request is too ambiguous to research meaningfully, but ask only enough to frame the research target.
+
+### Product clarification / brainstorming
+
+Use the reconnaissance findings to ask only material user decisions and to avoid generic questionnaire behavior.
+
+Do not ask the user a question that current research can answer without making a product preference decision on the user's behalf.
+
+If a conservative, reversible default satisfies the Confirmed product intent and does not materially change UX, scope, privacy, cost, or long-lived constraints, prefer the default over another approval checkpoint. Make the default visible when it matters.
+
+### Pass 2 — decision-focused technical research
+
+Once the product direction is sufficiently clear, research the concrete technical decisions needed to produce a stable architecture and worker-ready constraints.
+
+Verify current facts as applicable:
+
+- platform APIs, target/runtime/version support, and deprecations;
+- official architecture and UI guidance;
+- library/tool maturity, compatibility, release status, and maintenance;
+- persistence, protocol, storage, or synchronization choices;
+- security/privacy requirements and platform policies;
+- migration and backward-compatibility implications;
+- testing/tooling constraints;
+- ecosystem limitations and known practical failure modes.
+
+This pass should resolve technical decisions, not create another questionnaire. The planner chooses routine technical solutions and escalates only choices that cross the user-decision boundary defined below.
+
+## Research source quality
+
+For current technical decisions, do not rely on model memory when authoritative current sources are reasonably available.
+
+Prefer evidence in this order:
+
+1. official platform/library documentation and architecture guidance;
+2. official release notes, changelogs, compatibility tables, and maintained repositories;
+3. primary technical sources from the maintainers or standards body;
+4. established community evidence for practical caveats, failure modes, and real-world compatibility.
+
+Use community discussion to discover practical problems and trade-offs, not as the sole authority for API/version/platform facts when primary sources exist.
 
 Research should answer concrete decisions. Prefer native, official, mature solutions over custom machinery when they satisfy the requirement.
+
+A separate `research.md` is not required by default. Preserve research-derived rationale where it matters in `docs/architecture.md` or an ADR so workers can tell that a significant choice was intentional rather than arbitrary. When a decision depends on volatile facts such as version compatibility or platform support, preserve enough source/version context to re-check it later.
 
 ## Planner decision authority
 
@@ -122,9 +182,19 @@ Concrete architectural choices are appropriate in `docs/architecture.md` when th
 
 Ask only for decisions that materially affect product behavior, data ownership/semantics, meaningful UX, important trade-offs, or acceptance criteria.
 
+Before asking a question, apply this filter:
+
+1. Can current research answer it without deciding a user preference? If yes, research it instead.
+2. Can a conservative reversible default satisfy the Confirmed intent without meaningful product impact? If yes, choose the default rather than opening another checkpoint.
+3. Would different answers materially change product behavior, scope, data semantics, privacy/cost, key UX, or acceptance? If no, the planner should decide it.
+4. Otherwise, ask the user.
+
+Additional rules:
+
 - Ask one material product decision at a time.
-- Prefer concrete alternatives when useful.
-- State current Confirmed scope and conservative defaults before asking the next question.
+- Prefer concrete alternatives when useful, and mark a recommended option when research and current Confirmed intent support one.
+- Do not batch a generic setup questionnaire merely because many product dimensions are imaginable.
+- State current Confirmed scope and conservative defaults before asking the next question when that helps orientation.
 - Do not ask about unrequested adjacent features; keep them Out of Scope unless their absence blocks Confirmed behavior.
 - Do not ask the user to decide routine engineering implementation details that the planner can resolve through research.
 - Do not use remembered prior-session requirements to answer a current clarification question.
@@ -183,7 +253,7 @@ specs/initial-scope.md
 - cross-component/external interfaces;
 - migration/compatibility constraints;
 - testing/deployment constraints that shape implementation;
-- rationale for significant choices when it prevents later re-litigation.
+- rationale and research context for significant choices when it prevents later re-litigation or stale assumptions.
 
 Use ADRs under `docs/decisions/` only for significant durable decisions whose alternatives/rationale will matter later.
 
@@ -245,12 +315,14 @@ Rules:
 Before execution planning, explicitly audit the artifacts:
 
 1. Every material product behavior is Confirmed or clearly Out of Scope.
-2. Every significant technical choice needed by workers is decided or intentionally delegated as a harmless local detail.
-3. No important cross-task interface, persistent-data rule, migration rule, or dependency boundary is left for a worker to invent.
-4. Product, spec, and architecture documents do not contradict each other.
-5. No Proposed or remembered requirement was silently promoted to approved truth.
-6. Acceptance-relevant requirements are testable/verifiable.
-7. Concrete technology choices are supported by research or existing project constraints.
+2. For architectural/new-project work, reconnaissance research informed clarification and decision-focused technical research informed architecture unless external research was genuinely irrelevant.
+3. No question answerable by current research was unnecessarily pushed to the user as a technical preference choice.
+4. Every significant technical choice needed by workers is decided or intentionally delegated as a harmless local detail.
+5. No important cross-task interface, persistent-data rule, migration rule, or dependency boundary is left for a worker to invent.
+6. Product, spec, and architecture documents do not contradict each other.
+7. No Proposed or remembered requirement was silently promoted to approved truth.
+8. Acceptance-relevant requirements are testable/verifiable.
+9. Concrete technology choices are supported by current research or existing project constraints, with rationale/source context preserved where staleness would matter.
 
 If a new product decision appears while writing the docs, return it to the user. If a new technical decision appears, research and resolve it here unless it crosses the user-escalation boundary above.
 
